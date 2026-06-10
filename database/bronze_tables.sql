@@ -75,3 +75,8 @@ CREATE TABLE bronze.labs (
     unit_description TEXT, recommended_followup TEXT,
     _loaded_at TIMESTAMP DEFAULT now()
 );
+
+-- Grants for haip_user
+GRANT USAGE ON SCHEMA bronze TO haip_user;
+GRANT ALL ON ALL TABLES IN SCHEMA bronze TO haip_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA bronze GRANT ALL ON TABLES TO haip_user;

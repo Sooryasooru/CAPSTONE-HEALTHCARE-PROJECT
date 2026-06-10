@@ -3,15 +3,13 @@
 No cleaning here — just load and return. Cleaning happens in transform.py.
 """
 
-import logging
-
 import pandas as pd
 from datasets import load_from_disk
 
 from etl.config import RAW_FILES
+from etl.utils import get_logger
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _read_csv(name: str) -> pd.DataFrame:
@@ -51,3 +49,4 @@ if __name__ == "__main__":
     tabular = extract_tabular()
     for source_name, frame in tabular.items():
         logger.info("%s columns: %s", source_name, list(frame.columns))
+        
