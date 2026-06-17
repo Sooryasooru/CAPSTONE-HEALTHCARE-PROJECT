@@ -3,17 +3,21 @@
 All scripts import from here so nothing is hardcoded.
 """
 
-from dotenv import load_dotenv
-load_dotenv()
-
 import os
 from pathlib import Path
 
-# --- Project paths ---
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from dotenv import load_dotenv
+
+# --- Project root: three levels up from src/etl/config.py -> HAIP/ ---
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+# --- Load environment variables from .env at the project root ---
+ENV_PATH = PROJECT_ROOT / ".env"
+load_dotenv(ENV_PATH)
+
+# --- Raw data paths ---
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 
-# --- Raw data file paths ---
 RAW_FILES = {
     "patients":   RAW_DIR / "admissions&patients_data" / "patient&admission_data" / "HDHI Admission data.csv",
     "mortality":  RAW_DIR / "admissions&patients_data" / "patient&admission_data" / "HDHI Mortality Data.csv",
@@ -23,7 +27,7 @@ RAW_FILES = {
     "documents":  RAW_DIR / "medical_documents" / "guidelines_dataset",
 }
 
-# --- Postgres connection (use environment variables, never hardcode passwords) ---
+# --- Postgres connection (credentials from environment, never hardcoded) ---
 DB_CONFIG = {
     "host":     os.getenv("DB_HOST", "localhost"),
     "port":     os.getenv("DB_PORT", "5432"),

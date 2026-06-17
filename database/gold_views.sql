@@ -1,8 +1,7 @@
--- ============================================
 -- GOLD LAYER: analytics-ready views (HAIP)
 -- Built on silver. Each view summarizes within
 -- its own domain (sources are independent).
--- ============================================
+
 
 CREATE SCHEMA IF NOT EXISTS gold;
 
@@ -96,10 +95,8 @@ FROM silver.labs
 GROUP BY test_name
 ORDER BY times_run DESC;
 
--- ============================================
 -- GRANTS: give haip_user read access to gold
 -- (re-applied on every rebuild)
--- ============================================
 
 GRANT USAGE ON SCHEMA gold TO haip_user;
 GRANT SELECT ON ALL TABLES IN SCHEMA gold TO haip_user;

@@ -1,6 +1,4 @@
--- ============================================
 -- SILVER LAYER: cleaned + typed tables (HAIP)
--- ============================================
 
 CREATE SCHEMA IF NOT EXISTS silver;
 

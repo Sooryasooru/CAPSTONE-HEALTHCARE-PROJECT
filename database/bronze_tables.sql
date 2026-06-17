@@ -1,7 +1,5 @@
--- ============================================
 -- BRONZE LAYER: raw landing tables (HAIP)
 -- All TEXT; cleaning + typing happens in silver.
--- ============================================
 
 CREATE SCHEMA IF NOT EXISTS bronze;
 

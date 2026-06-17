@@ -1,4 +1,3 @@
--- ============================================
 -- MASTER SCHEMA RUNNER (HAIP)
 -- Rebuilds the full medallion architecture in order:
 --   bronze -> silver -> gold
@@ -8,7 +7,6 @@
 --
 -- Usage (from project root):
 --   sudo -u postgres psql -d haip < database/schema.sql
--- ============================================
 
 \echo 'Dropping dependent layers (gold) first...'
 DROP SCHEMA IF EXISTS gold CASCADE;

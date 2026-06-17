@@ -14,9 +14,7 @@ from etl.utils import get_engine, get_logger
 
 logger = get_logger(__name__)
 
-# ------------------------------------------------------------
 # Value mappings (codes -> readable labels)
-# ------------------------------------------------------------
 
 GENDER_MAP = {"M": "Male", "F": "Female"}
 RURAL_MAP = {"R": "Rural", "U": "Urban"}
@@ -39,10 +37,7 @@ PATIENTS_NUMERIC = [
 
 ICU_TEXT = ["subject_id", "gender", "ethnicity", "insurance", "hospital_admit_source"]
 
-
-# ------------------------------------------------------------
 # Helpers
-# ------------------------------------------------------------
 
 def _read_bronze(engine, table: str) -> pd.DataFrame:
     """Read a bronze table into a DataFrame."""
@@ -57,9 +52,7 @@ def _write_silver(engine, df: pd.DataFrame, table: str) -> None:
     logger.info("Loaded %d rows into silver.%s", len(df), table)
 
 
-# ------------------------------------------------------------
 # Transforms (one per source)
-# ------------------------------------------------------------
 
 def transform_patients(engine) -> pd.DataFrame:
     """Clean and type the patients source."""
@@ -159,10 +152,7 @@ def transform_labs(engine) -> pd.DataFrame:
     logger.info("labs transformed: %d rows", len(df))
     return df
 
-
-# ------------------------------------------------------------
 # Main Entry Point
-# ------------------------------------------------------------
 
 def run() -> None:
     """Run all silver transforms."""
