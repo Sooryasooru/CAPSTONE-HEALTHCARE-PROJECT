@@ -244,3 +244,8 @@ All EDA findings were validated against established clinical knowledge — confi
 ## 📝 License & Acknowledgements
 
 Built as a capstone data-engineering project. Datasets sourced from public repositories (Kaggle, HuggingFace) under their respective licenses.
+
+
+##fro running the dasbaord 
+cd ~/Documents/capstone/HAIP/healthcare-project/src
+python -m dashboard.app

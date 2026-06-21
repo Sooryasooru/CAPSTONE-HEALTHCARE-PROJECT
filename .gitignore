@@ -11,3 +11,6 @@ data/raw/
 
 # Trained model artifacts (regenerate with models.py)
 src/prediction/classification/models/
+
+# Trained model artifacts (regenerate with models.py)
+src/prediction/classification/models/

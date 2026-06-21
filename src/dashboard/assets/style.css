@@ -40,3 +40,7 @@ body { margin: 0; background: #F7F9FB; color: #0B1F33;
 @media (max-width: 900px) {
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
+.plan-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+.plan-table th { background: #1A7A8C; color: #fff; padding: 8px 10px; text-align: left; }
+.plan-table td { padding: 7px 10px; border-bottom: 1px solid #EEF2F5; color: #0B1F33; }
+.plan-table tr:nth-child(even) td { background: #F7F9FB; }
