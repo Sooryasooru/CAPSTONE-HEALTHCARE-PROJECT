@@ -19,3 +19,7 @@ src/prediction/classification/models/
 synthea/synthea-with-dependencies.jar
 synthea/output/fhir/
 synthea/output/metadata/
+
+# Raw and legacy data (not versioned)
+data/raw/
+data/raw_legacy/
