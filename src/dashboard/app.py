@@ -1,9 +1,10 @@
-"""Dashboard layer: clinical analytics + patient journey + risk (Plotly Dash).
+"""Dashboard layer: clinical analytics + journey + risk + forecast (Plotly Dash).
 
 Reads only from the analytics and prediction layers; computes nothing itself.
     - KPI cards        <- derived from gold.patient_360 + revenue
     - analytics charts <- engine.get_* functions (connected Synthea views)
     - Patient 360      <- engine.get_patient_360()  (four tables joined)
+    - forecast         <- prediction.forecast / prediction.planning
     - risk panel       <- prediction.classification.profile (3 connected targets)
 
 All data flows from the connected Synthea schema.
@@ -21,6 +22,9 @@ from analytics import engine
 from etl.utils import get_logger
 from prediction.classification import profile
 from prediction.classification.features import get_features
+from prediction.forecast import forecast_admissions
+from prediction.planning import build_planning
+from prediction.timeseries import build_monthly_admissions
 
 logger: logging.Logger = get_logger(__name__)
 
@@ -140,6 +144,47 @@ def fig_revenue() -> go.Figure:
     return fig
 
 
+# --- Forecasting (prediction) ----------------------------------------------
+def fig_forecast() -> go.Figure:
+    """Historical encounter volume + the Holt-Winters forecast."""
+    hist = build_monthly_admissions()
+    fc = forecast_admissions(6)
+    # Show only the most recent ~3 years of history for readability.
+    hist_recent = hist.tail(36)
+    fig = go.Figure()
+    fig.add_scatter(x=hist_recent["month"], y=hist_recent["admissions"],
+                    name="Actual", mode="lines+markers",
+                    line=dict(color=TEAL, width=2), marker=dict(size=4))
+    # Join the forecast to the last actual point for a continuous line.
+    bridge_x = [hist["month"].iloc[-1]] + list(fc["month"])
+    bridge_y = [hist["admissions"].iloc[-1]] + list(fc["forecast"])
+    fig.add_scatter(x=bridge_x, y=bridge_y, name="Forecast",
+                    mode="lines+markers",
+                    line=dict(color=AMBER, width=2, dash="dash"),
+                    marker=dict(size=4))
+    fig.update_layout(
+        title=dict(text="Monthly encounters — actual + 6-month forecast",
+                   x=0.02, y=0.97),
+        height=380, paper_bgcolor="white", plot_bgcolor="white", font=dict(color=INK),
+        margin=dict(t=60, b=40, l=20, r=20),
+        legend=dict(orientation="h", y=1.04, x=0.5, xanchor="center"),
+        yaxis=dict(title="encounters / month", showgrid=True, gridcolor="#EEF2F5"),
+    )
+    return fig
+
+
+def planning_table() -> html.Table:
+    """Render the planning forecast as an HTML table."""
+    df = build_planning(6)
+    df["month"] = df["month"].dt.strftime("%b %Y")
+    header = ["Month", "Forecast", "Change %", "Inpatient cases", "Nurse est."]
+    cols = ["month", "forecast", "change_pct", "inpatient_cases", "nurse_shifts"]
+    head = html.Tr([html.Th(h) for h in header])
+    rows = [html.Tr([html.Td(str(r[c])) for c in cols])
+            for _, r in df.iterrows()]
+    return html.Table(className="plan-table", children=[head, *rows])
+
+
 # --- Patient risk panel (prediction — connected targets) -------------------
 def risk_panel_figure(index: int) -> go.Figure:
     """Horizontal bar chart of one stay's three connected risk scores."""
@@ -216,7 +261,7 @@ def build_layout() -> html.Div:
             html.Div("HAIP", className="logo"),
             html.Div([
                 html.H1("Clinical Analytics", className="title"),
-                html.P("Connected patient journeys, cost, risk & population health",
+                html.P("Connected journeys, cost, forecasting, risk & population health",
                        className="subtitle"),
             ]),
         ]),
@@ -238,6 +283,18 @@ def build_layout() -> html.Div:
                 "Monthly revenue from all encounters. Total claim cost vs the "
                 "share covered by payers — the gap is patient responsibility.",
             ]),
+        ]),
+
+        html.Div(className="section-label", children="Forecasting · capacity"),
+        html.Div(className="drill-panel", children=[
+            dcc.Graph(figure=fig_forecast()),
+            html.Div(className="drill-note", children=[
+                "Holt-Winters projection of monthly encounter volume. The "
+                "planning table translates the forecast into operational "
+                "figures (inpatient share 0.8%, avg stay 4.9 days; the nurse "
+                "estimate uses a stated 1:4 ratio a hospital can adjust).",
+            ]),
+            planning_table(),
         ]),
 
         html.Div(className="section-label",
@@ -303,3 +360,4 @@ def update_risk(index: int) -> go.Figure:
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
