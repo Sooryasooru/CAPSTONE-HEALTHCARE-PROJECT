@@ -2,12 +2,17 @@
 
 The unit of analysis is one INPATIENT ENCOUNTER (a hospital stay), because
 the flagship target — 30-day readmission — is defined per stay. For each
-inpatient encounter we join across four connected tables:
+inpatient encounter we join across the connected tables:
 
     patients      -> demographics (age at admission, gender)
-    encounters    -> this stay (length, cost, encounter class) + prior history
-    conditions    -> comorbidities recorded BEFORE this stay (real Synthea codes)
-    observations  -> vitals recorded DURING this stay (BP, BMI, heart rate)
+    encounters    -> this stay (length, cost) + prior utilization history
+    conditions    -> comorbidities recorded BEFORE this stay (real codes)
+    observations  -> vitals recorded DURING this stay (BP, heart rate)
+
+Engineered history features (all time-safe, counted BEFORE the index stay):
+    prior_conditions_count    -> distinct conditions a patient already carries
+    prior_emergency_visits    -> emergency encounters before this stay
+    days_since_last_encounter -> recency of the patient's prior care
 
 Targets (all supported off the same shared matrix):
     readmission  -> another inpatient stay within 30 days of discharge
@@ -16,9 +21,8 @@ Targets (all supported off the same shared matrix):
 
 Leakage guards (the connected-data discipline):
     - TIME: every feature is known at or before discharge. Nothing from after
-      the index stay is ever a feature. This is the central guard for
-      readmission and is enforced when the feature is built (conditions use
-      start < encounter stop; vitals use the index encounter only).
+      the index stay is ever a feature. History features use start < index
+      start; vitals use the index encounter only.
     - TARGET: a target's defining column is never a feature for that target
       (high_cost drops total_claim_cost; see feature_columns_for).
 
@@ -34,7 +38,6 @@ from etl.utils import get_engine, get_logger
 logger: logging.Logger = get_logger(__name__)
 
 # Comorbidity flags — real Synthea condition descriptions confirmed present.
-# Each becomes a 0/1 feature: was this recorded for the patient before the stay?
 COMORBIDITIES = {
     "cmb_hypertension":   "Essential hypertension (disorder)",
     "cmb_ischemic_heart": "Ischemic heart disease (disorder)",
@@ -53,6 +56,8 @@ VITALS = {
 
 NUMERIC_FEATURES = [
     "age", "stay_length_days", "prior_encounters", "total_claim_cost",
+    "prior_conditions_count", "prior_emergency_visits",
+    "days_since_last_encounter",
 ] + list(VITALS.keys())
 
 BINARY_FEATURES = list(COMORBIDITIES.keys())
@@ -66,10 +71,10 @@ EXTRA_LEAKAGE = {
 
 
 def _load_base() -> pd.DataFrame:
-    """One row per inpatient encounter with demographics, stay facts, targets.
+    """One row per inpatient encounter with demographics, history, targets.
 
-    Readmission and the next-stay logic are computed in SQL with window
-    functions so the time ordering is explicit and correct.
+    Readmission, prior utilization, and history features are computed in SQL
+    so the time ordering is explicit and correct.
     """
     sql = """
     WITH inpt AS (
@@ -96,6 +101,19 @@ def _load_base() -> pd.DataFrame:
         date_part('year', age(i.start, p.birthdate)) AS age,
         p.gender,
         p.deathdate,
+        COALESCE((
+            SELECT count(DISTINCT c.code) FROM silver.conditions c
+            WHERE c.patient = i.patient AND c.start <= i.start::date
+        ), 0) AS prior_conditions_count,
+        COALESCE((
+            SELECT count(*) FROM silver.encounters e2
+            WHERE e2.patient = i.patient AND e2.encounterclass = 'emergency'
+              AND e2.start < i.start
+        ), 0) AS prior_emergency_visits,
+        COALESCE(EXTRACT(DAY FROM (i.start - (
+            SELECT max(e3.start) FROM silver.encounters e3
+            WHERE e3.patient = i.patient AND e3.start < i.start
+        ))), 0) AS days_since_last_encounter,
         -- readmission: another inpatient stay within 30 days of discharge
         (i.next_start IS NOT NULL
          AND i.next_start - i.stop <= INTERVAL '30 days')::int AS readmission,
@@ -114,11 +132,7 @@ def _load_base() -> pd.DataFrame:
 
 
 def _add_comorbidities(engine, base: pd.DataFrame) -> pd.DataFrame:
-    """Add 0/1 comorbidity flags recorded BEFORE each stay (time-safe).
-
-    A comorbidity counts only if its condition.start is on or before the
-    index stay's start — never using a diagnosis made after admission.
-    """
+    """Add 0/1 comorbidity flags recorded BEFORE each stay (time-safe)."""
     cond = pd.read_sql(
         "SELECT patient, description, start FROM silver.conditions "
         "WHERE description IN %(descs)s",
@@ -126,9 +140,7 @@ def _add_comorbidities(engine, base: pd.DataFrame) -> pd.DataFrame:
     cond["start"] = pd.to_datetime(cond["start"])
 
     base = base.copy()
-    base_start = pd.to_datetime(base["start"]).dt.tz_localize(None)
     for feat, desc in COMORBIDITIES.items():
-        # patients who had this condition recorded before each stay
         hits = cond[cond["description"] == desc][["patient", "start"]]
         merged = base.merge(hits, on="patient", how="left", suffixes=("", "_c"))
         merged["start_c"] = pd.to_datetime(merged["start_c"]).dt.tz_localize(None)
@@ -167,11 +179,7 @@ def _build() -> pd.DataFrame:
 
 
 def get_features() -> pd.DataFrame:
-    """Build the predictor matrix (numeric + binary), no missing values.
-
-    Vitals missing for a stay are median-filled with a missingness flag,
-    keeping the "not measured is signal" principle from the Week 1 EDA.
-    """
+    """Build the predictor matrix (numeric + binary), no missing values."""
     df = _build()
 
     numeric = df[NUMERIC_FEATURES].apply(pd.to_numeric, errors="coerce")
