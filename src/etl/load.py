@@ -1,7 +1,8 @@
-"""Load layer: write extracted DataFrames into bronze tables.
+"""Load layer: write extracted Synthea DataFrames into bronze tables.
 
 Idempotent — truncates each bronze table before insert, so re-runs
-never duplicate rows.
+never duplicate rows. Synthea's UPPERCASE headers are lowercased to
+match the bronze schema; no per-column renaming needed.
 """
 
 from sqlalchemy import text
@@ -11,42 +12,16 @@ from etl.utils import get_engine, get_logger
 
 logger = get_logger(__name__)
 
-BRONZE_COLUMNS = {
-    "patients": [
-        "sno", "mrd_no", "doa", "dod", "age", "gender", "rural",
-        "type_of_admission", "month_year", "duration_of_stay",
-        "duration_of_icu_stay", "outcome", "smoking", "alcohol", "dm", "htn",
-        "cad", "prior_cmp", "ckd", "hb", "tlc", "platelets", "glucose", "urea",
-        "creatinine", "bnp", "raised_cardiac_enzymes", "ef", "severe_anaemia",
-        "anaemia", "stable_angina", "acs", "stemi", "atypical_chestpain",
-        "heart_failure", "hfref", "hfnef", "valvular", "chb", "sss", "aki",
-        "cva_infract", "cva_bleed", "af", "vt", "psvt", "congenital", "uti",
-        "neuro_cardiogenic_syncope", "orthostatic", "infective_endocarditis",
-        "dvt", "cardiogenic_shock", "shock", "pulmonary_embolism",
-        "chest_infection",
-    ],
-    "mortality": ["sno", "mrd", "age", "gender", "rural_urban", "date_of_brought_dead"],
-    "billing": [
-        "patient_id", "age", "gender", "condition", "procedure", "cost",
-        "length_of_stay", "readmission", "outcome", "satisfaction",
-    ],
-    "labs": [
-        "date", "test_name", "result", "unit", "reference_range", "status",
-        "comment", "min_reference", "max_reference", "unit_description",
-        "recommended_followup",
-    ],
-}
-
 
 def load_to_bronze() -> None:
-    """Load all extracted datasets into bronze tables."""
+    """Load all extracted Synthea datasets into bronze tables."""
     engine = get_engine()
     datasets = extract_tabular()
 
     for name, df in datasets.items():
-        if name in BRONZE_COLUMNS:
-            df = df.copy()
-            df.columns = BRONZE_COLUMNS[name]
+        df = df.copy()
+        # Synthea ships UPPERCASE headers; bronze schema is lowercase.
+        df.columns = [c.lower() for c in df.columns]
 
         try:
             with engine.begin() as conn:
@@ -60,4 +35,3 @@ def load_to_bronze() -> None:
 
 if __name__ == "__main__":
     load_to_bronze()
-    

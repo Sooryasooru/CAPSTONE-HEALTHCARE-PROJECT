@@ -14,3 +14,8 @@ src/prediction/classification/models/
 
 # Trained model artifacts (regenerate with models.py)
 src/prediction/classification/models/
+
+# Synthea tool + raw output
+synthea/synthea-with-dependencies.jar
+synthea/output/fhir/
+synthea/output/metadata/

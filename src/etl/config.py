@@ -15,16 +15,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_PATH = PROJECT_ROOT / ".env"
 load_dotenv(ENV_PATH)
 
-# --- Raw data paths ---
-RAW_DIR = PROJECT_ROOT / "data" / "raw"
+# --- Raw data paths (Synthea connected dataset) ---
+RAW_DIR = PROJECT_ROOT / "data" / "raw" / "synthea"
 
+# Five core connected tables. All join on the patient key.
 RAW_FILES = {
-    "patients":   RAW_DIR / "admissions&patients_data" / "patient&admission_data" / "HDHI Admission data.csv",
-    "mortality":  RAW_DIR / "admissions&patients_data" / "patient&admission_data" / "HDHI Mortality Data.csv",
-    "billing":    RAW_DIR / "billing" / "billing_data" / "hospital data analysis.csv",
-    "icu":        RAW_DIR / "icu" / "ICU.csv",
-    "labs":       RAW_DIR / "labs" / "lab_test_results_public.csv",
-    "documents":  RAW_DIR / "medical_documents" / "guidelines_dataset",
+    "patients":     RAW_DIR / "patients.csv",
+    "encounters":   RAW_DIR / "encounters.csv",
+    "conditions":   RAW_DIR / "conditions.csv",
+    "observations": RAW_DIR / "observations.csv",
+    "procedures":   RAW_DIR / "procedures.csv",
 }
 
 # --- Postgres connection (credentials from environment, never hardcoded) ---
