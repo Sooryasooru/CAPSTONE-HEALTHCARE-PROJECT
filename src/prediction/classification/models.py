@@ -1,7 +1,8 @@
 """Classification layer: train risk models (LogReg, RandomForest, XGBoost).
 
-For each risk target, trains three classifiers on a stratified 80/20 split
-with class-imbalance handling, and saves them for evaluation and scoring.
+For each connected target (readmission, mortality, high_cost), trains three
+classifiers on a stratified 80/20 split with class-imbalance handling, and
+saves them for evaluation and scoring.
 
     - Logistic Regression : interpretable baseline (scaled features).
     - Random Forest       : robust non-linear ensemble.
@@ -76,13 +77,19 @@ def train_all() -> None:
         X = features[cols]
         y = targets[risk]
 
+        pos_total = int(y.sum())
+        # Honest flag: warn when a target has too few positives to trust.
+        if pos_total < 50:
+            logger.warning("Target '%s' has only %d positives — metrics will "
+                           "be unstable; report with caution.", risk, pos_total)
+
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE)
 
         neg, pos = int((y_train == 0).sum()), int((y_train == 1).sum())
         spw = neg / pos if pos else 1.0
-        logger.info("Risk '%s': train=%d test=%d pos_weight=%.2f",
-                    risk, len(X_train), len(X_test), spw)
+        logger.info("Risk '%s': train=%d test=%d positives=%d pos_weight=%.2f",
+                    risk, len(X_train), len(X_test), pos_total, spw)
 
         for name, est in _build_estimators(spw).items():
             est.fit(X_train, y_train)
@@ -90,7 +97,7 @@ def train_all() -> None:
             joblib.dump({"model": est, "features": cols}, path)
             logger.info("Saved %s", path.name)
 
-    # Save the test split indices so evaluate.py uses the same holdout.
+    # Save the split config so evaluate.py uses the same holdout.
     joblib.dump(
         {"test_size": TEST_SIZE, "random_state": RANDOM_STATE},
         MODELS_DIR / "_split_config.joblib")
