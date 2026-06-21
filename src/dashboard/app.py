@@ -1,13 +1,12 @@
-"""Dashboard layer: clinical analytics + patient journey (Plotly Dash).
+"""Dashboard layer: clinical analytics + patient journey + risk (Plotly Dash).
 
-Reads only from the analytics layer; computes nothing itself.
+Reads only from the analytics and prediction layers; computes nothing itself.
     - KPI cards        <- derived from gold.patient_360 + revenue
     - analytics charts <- engine.get_* functions (connected Synthea views)
     - Patient 360      <- engine.get_patient_360()  (four tables joined)
+    - risk panel       <- prediction.classification.profile (3 connected targets)
 
-Stage A: analytics + patient journey on the connected Synthea schema.
-Forecasting and the multi-risk panel return in Stage B, after the
-prediction layer is migrated.
+All data flows from the connected Synthea schema.
 
 Run from src/ with:  python -m dashboard.app
 """
@@ -20,6 +19,8 @@ from dash import Dash, Input, Output, dcc, html
 
 from analytics import engine
 from etl.utils import get_logger
+from prediction.classification import profile
+from prediction.classification.features import get_features
 
 logger: logging.Logger = get_logger(__name__)
 
@@ -33,12 +34,15 @@ GREEN = "#3C7A5A"
 MUTED = "#6B7A88"
 
 OUTCOME_COLOURS = {"Alive": GREEN, "Deceased": RED}
+RISK_COLOURS = {"readmission": AMBER, "mortality": RED, "high_cost": TEAL}
 
 app = Dash(__name__)
 app.title = "HAIP — Clinical Analytics"
 
 # Patient 360 is read once at startup for KPIs and the journey panel.
 _P360 = engine.get_patient_360()
+# Encounter count for the risk-panel dropdown (built once at startup).
+_N_ENCOUNTERS = len(get_features())
 
 
 # --- KPI cards -------------------------------------------------------------
@@ -136,9 +140,30 @@ def fig_revenue() -> go.Figure:
     return fig
 
 
+# --- Patient risk panel (prediction — connected targets) -------------------
+def risk_panel_figure(index: int) -> go.Figure:
+    """Horizontal bar chart of one stay's three connected risk scores."""
+    result = profile.score_encounter_by_index(index)
+    risks = result["risks"]
+    labels = [r["label"] for r in risks]
+    values = [r["probability_pct"] for r in risks]
+    colours = [RISK_COLOURS.get(r["risk"], TEAL) for r in risks]
+    fig = go.Figure(go.Bar(
+        x=values, y=labels, orientation="h", marker=dict(color=colours),
+        text=[f"{v:.1f}%" for v in values], textposition="auto",
+    ))
+    fig.update_layout(
+        title=dict(text=f"Risk profile — inpatient stay #{index}", x=0.02, y=0.95),
+        height=300, paper_bgcolor="white", plot_bgcolor="white", font=dict(color=INK),
+        margin=dict(t=50, b=30, l=20, r=20),
+        xaxis=dict(title="risk (%)", range=[0, 100], showgrid=True, gridcolor="#EEF2F5"),
+    )
+    return fig
+
+
 # --- Patient 360 (flagship — connected journey) ----------------------------
 def patient_journey_figure(patient_id: str) -> go.Figure:
-    """One patient's journey summary — encounters, conditions, procedures, cost."""
+    """One patient's journey summary — encounters, conditions, procedures."""
     row = _P360.loc[_P360["patient_id"] == patient_id].iloc[0]
     metrics = ["Encounters", "Conditions", "Procedures"]
     values = [row["total_encounters"], row["distinct_conditions"],
@@ -176,7 +201,6 @@ def patient_summary(patient_id: str) -> html.Div:
 def build_layout() -> html.Div:
     """Build the full page layout."""
     logger.info("Building dashboard layout")
-    # Default to the patient with the most encounters (most interesting journey).
     top = _P360.sort_values("total_encounters", ascending=False)
     patient_options = [
         {"label": f"{r['patient_id'][:8]}… ({int(r['total_encounters'])} enc)",
@@ -184,13 +208,15 @@ def build_layout() -> html.Div:
         for _, r in top.head(200).iterrows()
     ]
     default_patient = top.iloc[0]["patient_id"]
+    stay_options = [{"label": f"Inpatient stay #{i}", "value": i}
+                    for i in range(0, min(_N_ENCOUNTERS, 200))]
 
     return html.Div(className="page", children=[
         html.Div(className="header", children=[
             html.Div("HAIP", className="logo"),
             html.Div([
                 html.H1("Clinical Analytics", className="title"),
-                html.P("Connected patient journeys, cost & population health",
+                html.P("Connected patient journeys, cost, risk & population health",
                        className="subtitle"),
             ]),
         ]),
@@ -227,9 +253,26 @@ def build_layout() -> html.Div:
             html.Div(id="patient-summary"),
         ]),
 
+        html.Div(className="section-label",
+                 children="Patient risk · early-warning panel"),
+        html.Div(className="drill-controls", children=[
+            html.Label("Select inpatient stay", className="control-label"),
+            dcc.Dropdown(id="stay-select", options=stay_options,
+                         value=0, clearable=False, className="dropdown"),
+        ]),
+        html.Div(className="drill-panel", children=[
+            dcc.Graph(id="risk-chart"),
+            html.Div(className="drill-note", children=[
+                "Multi-risk triage aid (not a diagnosis). Scores use only "
+                "features known at or before discharge — no future data leaks "
+                "in. Best model per risk by PR-AUC: Random Forest "
+                "(readmission), XGBoost (mortality, high cost).",
+            ]),
+        ]),
+
         html.Div(className="footer",
                  children="HAIP · presentation layer · connected analytics "
-                          "from PostgreSQL (Synthea)"),
+                          "+ prediction from PostgreSQL (Synthea)"),
     ])
 
 
@@ -248,6 +291,15 @@ def update_patient(patient_id: str):
     return patient_journey_figure(patient_id), patient_summary(patient_id)
 
 
+@app.callback(
+    Output("risk-chart", "figure"),
+    Input("stay-select", "value"),
+)
+def update_risk(index: int) -> go.Figure:
+    """Rebuild the risk panel for the selected inpatient stay."""
+    logger.info("Risk panel for stay #%s", index)
+    return risk_panel_figure(index)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
-    
