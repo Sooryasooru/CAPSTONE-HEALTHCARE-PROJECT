@@ -1,26 +1,30 @@
-"""Upload app: a standalone Dash app for hospital data upload + AutoML.
+"""Upload app: hospital data intake, validation & column mapping (Dash).
 
-Lets any hospital drop a file (CSV / JSON / Excel), pick a target column and
-feature columns, and train a fresh model on THEIR data — then see honest
-metrics, a confusion matrix (classification) or error scores (regression),
-and feature importances.
+A standalone gatekeeper that checks any uploaded hospital dataset against
+HAIP's standard schema BEFORE it enters the pipeline. It does NOT train a
+model — model training happens later, at the end of the pipeline.
 
-Runs independently of the main dashboard (which stays untouched):
-    python -m dashboard.upload_app
-Then open http://127.0.0.1:8051
+Flow:
+    Step 1 · Upload         drag-drop CSV / JSON / Excel
+    Step 2 · Map columns    auto-match the file's columns to HAIP's standard;
+                            user can remap, add manually, or skip extras
+    Step 3 · Validate       report: required present/missing, recommended
+                            missing, and per-column data-quality issues
+    Step 4 · Approve        proceed (with explicit approval if anything is
+                            missing) — the standardized data is the output
 
-Powered by the proven engine in pipeline.py — this file is only the UI.
+Runs independently of the main dashboard:
+    python -m dashboard.upload_app   ->  http://127.0.0.1:8051
 """
 
 import base64
+import difflib
 import io
 import logging
 
 import pandas as pd
-import plotly.graph_objects as go
+import dash
 from dash import Dash, Input, Output, State, dcc, html, dash_table
-
-from dashboard.pipeline import train_on_upload
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +36,26 @@ RED = "#C2453D"
 GREEN = "#3C7A5A"
 MUTED = "#6B7A88"
 
+# --- HAIP standard schema: what the pipeline expects ---------------------
+# Required: the pipeline cannot run without these.
+REQUIRED_COLUMNS = {
+    "patient_id":     "Unique patient identifier (the join key)",
+    "encounter_date": "Admission / visit date",
+    "encounter_class": "Encounter type (inpatient, emergency, ...)",
+    "total_cost":     "Encounter cost",
+}
+# Recommended: improve analysis/prediction but are not mandatory.
+RECOMMENDED_COLUMNS = {
+    "age":            "Patient age",
+    "gender":         "Patient gender",
+    "condition":      "Diagnosis / condition",
+    "procedure":      "Procedure performed",
+    "discharge_date": "Discharge date",
+}
+ALL_STANDARD = {**REQUIRED_COLUMNS, **RECOMMENDED_COLUMNS}
+
 app = Dash(__name__, suppress_callback_exceptions=True)
-app.title = "HAIP — Data Upload & AutoML"
+app.title = "HAIP — Data Intake & Validation"
 
 
 def _parse_upload(contents: str, filename: str) -> pd.DataFrame:
@@ -50,50 +72,45 @@ def _parse_upload(contents: str, filename: str) -> pd.DataFrame:
     raise ValueError(f"unsupported file type: {filename}")
 
 
-def _confusion_figure(cm, labels) -> go.Figure:
-    """Render a confusion-matrix heatmap."""
-    fig = go.Figure(go.Heatmap(
-        z=cm, x=[f"pred {l}" for l in labels], y=[f"actual {l}" for l in labels],
-        colorscale="Blues", showscale=False,
-        text=cm, texttemplate="%{text}", textfont=dict(size=14),
-    ))
-    fig.update_layout(
-        title=dict(text="Confusion matrix", x=0.02),
-        height=320, paper_bgcolor="white", plot_bgcolor="white",
-        font=dict(color=INK), margin=dict(t=50, b=40, l=60, r=20),
-    )
-    return fig
+def _auto_match(std_col: str, file_cols: list[str]) -> str | None:
+    """Best-guess which uploaded column maps to a standard column.
+
+    Uses case-insensitive fuzzy matching on names (e.g. 'MRN' won't match
+    but 'patient_id'/'patientid'/'PATIENT' will). Returns the file column or
+    None if no confident match.
+    """
+    norm = {c.lower().replace("_", "").replace(" ", ""): c for c in file_cols}
+    target = std_col.lower().replace("_", "")
+    # direct contains match first
+    for key, original in norm.items():
+        if target in key or key in target:
+            return original
+    # fuzzy fallback
+    close = difflib.get_close_matches(target, list(norm.keys()), n=1, cutoff=0.8)
+    return norm[close[0]] if close else None
 
 
-def _importance_figure(importances) -> go.Figure:
-    """Render a feature-importance horizontal bar chart."""
-    names = [n for n, _ in importances][::-1]
-    vals = [v for _, v in importances][::-1]
-    fig = go.Figure(go.Bar(
-        x=vals, y=names, orientation="h", marker=dict(color=TEAL),
-        text=[f"{v:.3f}" for v in vals], textposition="auto",
-    ))
-    fig.update_layout(
-        title=dict(text="Feature importance", x=0.02),
-        height=max(320, 26 * len(names) + 80),
-        paper_bgcolor="white", plot_bgcolor="white", font=dict(color=INK),
-        margin=dict(t=50, b=40, l=20, r=20),
-        xaxis=dict(title="importance", showgrid=True, gridcolor="#EEF2F5"),
-    )
-    return fig
+def _quality(series: pd.Series) -> dict:
+    """Per-column data-quality summary."""
+    n = len(series)
+    missing = int(series.isna().sum())
+    return {
+        "missing_pct": round(100 * missing / n, 1) if n else 0.0,
+        "dtype": str(series.dtype),
+        "unique": int(series.nunique(dropna=True)),
+    }
 
 
 app.layout = html.Div(className="page", children=[
     html.Div(className="header", children=[
         html.Div("HAIP", className="logo"),
         html.Div([
-            html.H1("Data Upload & AutoML", className="title"),
-            html.P("Upload any hospital dataset, pick a target, train a model",
-                   className="subtitle"),
+            html.H1("Data Intake & Validation", className="title"),
+            html.P("Upload a hospital dataset — we check it against the HAIP "
+                   "standard before it enters the pipeline", className="subtitle"),
         ]),
     ]),
 
-    # --- Step 1: upload ---
     html.Div(className="section-label", children="Step 1 · Upload a dataset"),
     dcc.Upload(
         id="upload-data",
@@ -104,26 +121,22 @@ app.layout = html.Div(className="page", children=[
             html.Span("CSV, JSON, or Excel", style={"color": MUTED, "fontSize": "13px"}),
         ]),
         style={
-            "width": "100%", "height": "120px", "lineHeight": "24px",
-            "borderWidth": "2px", "borderStyle": "dashed",
-            "borderColor": TEAL, "borderRadius": "12px",
+            "width": "100%", "height": "120px", "borderWidth": "2px",
+            "borderStyle": "dashed", "borderColor": TEAL, "borderRadius": "12px",
             "textAlign": "center", "padding": "30px 0", "background": "#F7FAFB",
         },
         multiple=False,
     ),
     html.Div(id="upload-status", className="drill-note"),
 
-    # --- Step 2: column mapping (hidden until a file is loaded) ---
     html.Div(id="mapping-section"),
+    html.Div(id="validation-section"),
 
-    # --- Step 3: results ---
-    html.Div(id="results-section"),
-
-    # Stores the uploaded data as JSON between callbacks
     dcc.Store(id="data-store"),
 
     html.Div(className="footer",
-             children="HAIP · upload pipeline · trains a fresh model on your data"),
+             children="HAIP · data intake · validates uploads against the "
+                      "standard schema before the pipeline"),
 ])
 
 
@@ -131,130 +144,222 @@ app.layout = html.Div(className="page", children=[
     Output("data-store", "data"),
     Output("upload-status", "children"),
     Output("mapping-section", "children"),
-    Output("results-section", "children"),
     Input("upload-data", "contents"),
     State("upload-data", "filename"),
     prevent_initial_call=True,
 )
 def handle_upload(contents, filename):
-    """Parse the uploaded file and build the column-mapping UI."""
+    """Parse the file and build the column-mapping UI with auto-matches."""
     if contents is None:
-        return None, "", None, None
+        return None, "", None
     try:
         df = _parse_upload(contents, filename)
     except Exception as exc:
-        return None, f"Could not read file: {exc}", None, None
-
+        return None, f"Could not read file: {exc}", None
     if df.empty or len(df.columns) < 2:
-        return None, "File needs at least 2 columns and some rows.", None, None
+        return None, "File needs at least 2 columns and some rows.", None
+
+    file_cols = list(df.columns)
+    skip_option = "— skip / not present —"
+    dropdown_opts = [{"label": skip_option, "value": "__none__"}] + \
+                    [{"label": c, "value": c} for c in file_cols]
+
+    # Build one mapping row per standard column, pre-filled with an auto-match.
+    rows = []
+    for std_col, desc in ALL_STANDARD.items():
+        guess = _auto_match(std_col, file_cols)
+        required = std_col in REQUIRED_COLUMNS
+        tag = "REQUIRED" if required else "recommended"
+        tag_colour = RED if required else AMBER
+        rows.append(html.Div(style={
+            "display": "grid",
+            "gridTemplateColumns": "200px 1fr 110px",
+            "gap": "12px", "alignItems": "center", "marginBottom": "8px",
+        }, children=[
+            html.Div([
+                html.Strong(std_col, style={"color": INK}),
+                html.Div(desc, style={"fontSize": "11px", "color": MUTED}),
+            ]),
+            dcc.Dropdown(
+                id={"type": "map", "std": std_col},
+                options=dropdown_opts,
+                value=guess if guess else "__none__",
+                clearable=False, className="dropdown",
+            ),
+            html.Span(tag, style={
+                "color": "white", "background": tag_colour,
+                "padding": "3px 8px", "borderRadius": "6px",
+                "fontSize": "11px", "textAlign": "center",
+            }),
+        ]))
 
     preview = dash_table.DataTable(
         data=df.head(5).to_dict("records"),
-        columns=[{"name": c, "id": c} for c in df.columns],
+        columns=[{"name": c, "id": c} for c in file_cols],
         style_table={"overflowX": "auto"},
         style_cell={"fontSize": "12px", "padding": "6px",
                     "fontFamily": "inherit", "textAlign": "left"},
         style_header={"backgroundColor": "#F1F5F6", "fontWeight": "600"},
     )
 
-    cols = list(df.columns)
     mapping = html.Div([
-        html.Div(className="section-label",
-                 children="Step 2 · Map your columns"),
+        html.Div(className="section-label", children="Step 2 · Map your columns"),
         html.Div(className="drill-note", children=[
-            f"Loaded {len(df):,} rows × {len(cols)} columns. ",
-            "Pick the column to predict (target) and the columns to use as "
-            "inputs (features).",
+            f"Loaded {len(df):,} rows × {len(file_cols)} columns. ",
+            "We auto-matched your columns to the HAIP standard below. ",
+            "Fix any wrong matches, or set a column to “skip” if it isn’t "
+            "present. Required columns are marked in red.",
         ]),
-        html.Label("Target column (what to predict)",
-                   className="control-label"),
-        dcc.Dropdown(id="target-select",
-                     options=[{"label": c, "value": c} for c in cols],
-                     placeholder="Select the column to predict",
-                     className="dropdown"),
-        html.Label("Feature columns (inputs)", className="control-label",
-                   style={"marginTop": "12px"}),
-        dcc.Dropdown(id="feature-select",
-                     options=[{"label": c, "value": c} for c in cols],
-                     multi=True, placeholder="Select one or more input columns",
-                     className="dropdown"),
-        html.Button("Train model", id="train-btn", n_clicks=0,
-                    style={
-                        "marginTop": "16px", "padding": "10px 24px",
-                        "background": TEAL, "color": "white", "border": "none",
-                        "borderRadius": "8px", "cursor": "pointer",
-                        "fontSize": "15px",
-                    }),
+        html.Div(rows, style={"marginTop": "8px"}),
+        html.Button("Validate dataset", id="validate-btn", n_clicks=0, style={
+            "marginTop": "16px", "padding": "10px 24px", "background": TEAL,
+            "color": "white", "border": "none", "borderRadius": "8px",
+            "cursor": "pointer", "fontSize": "15px",
+        }),
         html.Div(className="section-label", children="Preview",
                  style={"marginTop": "20px"}),
         preview,
     ])
 
     return df.to_json(date_format="iso", orient="split"), \
-        f"Loaded: {filename}", mapping, None
+        f"Loaded: {filename}", mapping
 
 
 @app.callback(
-    Output("results-section", "children", allow_duplicate=True),
-    Input("train-btn", "n_clicks"),
+    Output("validation-section", "children", allow_duplicate=True),
+    Input("validate-btn", "n_clicks"),
     State("data-store", "data"),
-    State("target-select", "value"),
-    State("feature-select", "value"),
+    State({"type": "map", "std": dash.ALL}, "value"),
+    State({"type": "map", "std": dash.ALL}, "id"),
     prevent_initial_call=True,
 )
-def train_model(n_clicks, data_json, target, features):
-    """Run the pipeline on the chosen target/features and show results."""
+def validate(n_clicks, data_json, map_values, map_ids):
+    """Check the mapped dataset against the standard and report issues."""
     if not n_clicks or data_json is None:
         return None
-    if not target:
-        return html.Div("Please select a target column.", className="drill-note")
-    if not features:
-        return html.Div("Please select at least one feature column.",
-                        className="drill-note")
-
     df = pd.read_json(io.StringIO(data_json), orient="split")
-    result = train_on_upload(df, target, features)
 
-    if result.error:
-        return html.Div(className="drill-panel", children=[
-            html.Div(className="section-label", children="Result"),
-            html.Div(f"Could not train: {result.error}", className="drill-note",
-                     style={"color": RED}),
-        ])
+    # Build {standard_col -> chosen_file_col or None}
+    mapping = {}
+    for val, idd in zip(map_values, map_ids):
+        std = idd["std"]
+        mapping[std] = None if val == "__none__" else val
 
-    # Metric cards
-    metric_cards = html.Div(className="kpi-row", children=[
-        html.Div(className="kpi-card", style={"borderLeft": f"5px solid {TEAL}"},
-                 children=[
-                     html.Div(str(v), className="kpi-value",
-                              style={"color": TEAL}),
-                     html.Div(k.upper(), className="kpi-label"),
-                 ])
-        for k, v in result.metrics.items()
-    ])
+    missing_required = [c for c in REQUIRED_COLUMNS if not mapping.get(c)]
+    missing_recommended = [c for c in RECOMMENDED_COLUMNS if not mapping.get(c)]
 
-    children = [
-        html.Div(className="section-label", children="Step 3 · Results"),
-        html.Div(className="drill-note", children=[
-            html.Strong(f"{result.problem_type.title()} · "),
-            f"target '{result.target}' · trained on {result.n_train} rows, "
-            f"tested on {result.n_test}. ",
-            "Random Forest. Metrics are on the held-out test set.",
-        ]),
-        metric_cards,
-    ]
+    # Per-column quality for mapped columns
+    quality_rows = []
+    for std, file_col in mapping.items():
+        if not file_col:
+            continue
+        q = _quality(df[file_col])
+        issue = q["missing_pct"] > 0
+        quality_rows.append({
+            "Standard": std, "Your column": file_col,
+            "Type": q["dtype"], "Missing %": q["missing_pct"],
+            "Unique": q["unique"],
+            "Status": "⚠ has missing values" if issue else "✓ ok",
+        })
 
-    if result.confusion:
-        children.append(html.Div(className="drill-panel", children=[
-            dcc.Graph(figure=_confusion_figure(result.confusion,
-                                               result.class_labels)),
+    # Build the report
+    blocks = [html.Div(className="section-label", children="Step 3 · Validation report")]
+
+    if missing_required:
+        blocks.append(html.Div(className="drill-panel", style={
+            "borderLeft": f"4px solid {RED}"}, children=[
+            html.Strong("Required columns missing", style={"color": RED}),
+            html.Div("The pipeline cannot fully run without these. You can "
+                     "provide an alternative column or proceed with explicit "
+                     "approval (some features will be unavailable).",
+                     className="drill-note"),
+            html.Ul([html.Li(f"{c} — {REQUIRED_COLUMNS[c]}")
+                     for c in missing_required]),
+        ]))
+    else:
+        blocks.append(html.Div(className="drill-note", style={"color": GREEN},
+                      children="✓ All required columns are present."))
+
+    if missing_recommended:
+        blocks.append(html.Div(className="drill-panel", style={
+            "borderLeft": f"4px solid {AMBER}"}, children=[
+            html.Strong("Recommended columns missing", style={"color": AMBER}),
+            html.Div("Not required — you can proceed, but these improve "
+                     "analysis and prediction quality.", className="drill-note"),
+            html.Ul([html.Li(f"{c} — {RECOMMENDED_COLUMNS[c]}")
+                     for c in missing_recommended]),
         ]))
 
-    children.append(html.Div(className="drill-panel", children=[
-        dcc.Graph(figure=_importance_figure(result.importances)),
-    ]))
+    if quality_rows:
+        blocks.append(html.Div(className="section-label",
+                      children="Mapped column quality"))
+        blocks.append(dash_table.DataTable(
+            data=quality_rows,
+            columns=[{"name": c, "id": c} for c in
+                     ["Standard", "Your column", "Type", "Missing %",
+                      "Unique", "Status"]],
+            style_table={"overflowX": "auto"},
+            style_cell={"fontSize": "13px", "padding": "8px",
+                        "fontFamily": "inherit", "textAlign": "left"},
+            style_header={"backgroundColor": "#F1F5F6", "fontWeight": "600"},
+            style_data_conditional=[{
+                "if": {"filter_query": "{Status} contains 'missing'"},
+                "backgroundColor": "#FDF3E7"}],
+        ))
 
-    return html.Div(children=children)
+    # Approval / proceed
+    if missing_required:
+        proceed = html.Div(className="drill-panel", children=[
+            html.Strong("Approval required to proceed"),
+            html.Div("Your dataset is missing required columns. Confirm you "
+                     "want to proceed anyway — affected features will be "
+                     "disabled.", className="drill-note"),
+            html.Button("Proceed with approval", id="approve-btn", n_clicks=0,
+                        style={"padding": "10px 24px", "background": AMBER,
+                               "color": "white", "border": "none",
+                               "borderRadius": "8px", "cursor": "pointer"}),
+        ])
+    else:
+        proceed = html.Div(className="drill-panel", style={
+            "borderLeft": f"4px solid {GREEN}"}, children=[
+            html.Strong("Ready for the pipeline", style={"color": GREEN}),
+            html.Div("All required columns are mapped. This standardized "
+                     "dataset can now enter the ETL pipeline.",
+                     className="drill-note"),
+        ])
+    blocks.append(proceed)
+
+    return html.Div(blocks)
+
+
+
+@app.callback(
+    Output("validation-section", "children", allow_duplicate=True),
+    Input("approve-btn", "n_clicks"),
+    State("validation-section", "children"),
+    prevent_initial_call=True,
+)
+def confirm_proceed(n_clicks, current):
+    """Confirm the user approved proceeding despite missing columns.
+
+    Returns a fresh confirmation view (does not try to merge the existing
+    complex component tree, which is fragile to concatenate).
+    """
+    from dash import no_update
+    if not n_clicks:
+        return no_update
+    return html.Div([
+        html.Div(className="section-label", children="Step 4 · Accepted"),
+        html.Div(className="drill-panel", style={
+            "borderLeft": f"4px solid {GREEN}"}, children=[
+            html.Strong("Dataset accepted for the pipeline",
+                        style={"color": GREEN}),
+            html.Div("You approved proceeding. This standardized dataset is "
+                     "now ready to enter the ETL pipeline. Features that depend "
+                     "on the missing columns will be skipped.",
+                     className="drill-note"),
+        ]),
+    ])
 
 
 if __name__ == "__main__":
