@@ -62,7 +62,7 @@ NUMERIC_FEATURES = [
 
 BINARY_FEATURES = list(COMORBIDITIES.keys())
 
-TARGETS = ["readmission", "mortality", "high_cost"]
+TARGETS = ["readmission", "mortality", "high_cost", "deterioration"]
 
 # Per-target leakage drops (beyond what is structurally excluded).
 EXTRA_LEAKAGE = {
@@ -120,7 +120,18 @@ def _load_base() -> pd.DataFrame:
         -- mortality: died within 30 days of this discharge
         (p.deathdate IS NOT NULL
          AND p.deathdate - i.stop::date <= 30
-         AND p.deathdate >= i.stop::date)::int AS mortality
+         AND p.deathdate >= i.stop::date)::int AS mortality,
+        -- deterioration: any adverse event within 30 days of discharge
+        -- (readmission OR death OR a post-discharge emergency encounter)
+        (
+          (i.next_start IS NOT NULL AND i.next_start - i.stop <= INTERVAL '30 days')
+          OR (p.deathdate IS NOT NULL
+              AND p.deathdate - i.stop::date BETWEEN 0 AND 30)
+          OR EXISTS (
+              SELECT 1 FROM silver.encounters e2
+              WHERE e2.patient = i.patient AND e2.encounterclass = 'emergency'
+                AND e2.start > i.stop AND e2.start - i.stop <= INTERVAL '30 days')
+        )::int AS deterioration
     FROM inpt i
     JOIN silver.patients p ON p.id = i.patient;
     """
@@ -195,7 +206,7 @@ def get_features() -> pd.DataFrame:
 
 
 def get_targets() -> pd.DataFrame:
-    """Build the three binary targets aligned to the feature matrix rows."""
+    """Build the four binary targets aligned to the feature matrix rows."""
     df = _build()
     cost = pd.to_numeric(df["total_claim_cost"], errors="coerce")
     high_cost_threshold = cost.quantile(0.75)
@@ -203,6 +214,7 @@ def get_targets() -> pd.DataFrame:
         "readmission": df["readmission"].astype(int),
         "mortality": df["mortality"].astype(int),
         "high_cost": (cost >= high_cost_threshold).astype(int),
+        "deterioration": df["deterioration"].astype(int),
     })
     logger.info("Built targets: %s",
                 {c: int(targets[c].sum()) for c in targets.columns})
