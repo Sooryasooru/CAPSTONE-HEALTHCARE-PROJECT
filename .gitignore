@@ -23,3 +23,13 @@ synthea/output/metadata/
 # Raw and legacy data (not versioned)
 data/raw/
 data/raw_legacy/
+# Data — regeneratable, never commit
+synthea/
+data/raw_legacy/
+data/raw/
+*.arrow
+*.jar
+*.csv
+*.joblib
+*.pkl
+*.bak.*
