@@ -74,21 +74,16 @@ body {
 }
 
 /* --- KPI cards --- */
-.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
 .kpi-card {
-  background: var(--card); border-radius: 14px; padding: 18px 18px 20px;
+  background: var(--card); border-radius: 14px; padding: 22px 22px;
   box-shadow: var(--shadow); transition: transform 0.15s ease;
 }
 .kpi-card:hover { transform: translateY(-2px); }
-.kpi-head {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; margin-bottom: 10px;
-}
-.kpi-icon { width: 22px; height: 22px; opacity: 0.85; flex-shrink: 0; }
-.kpi-value { font-size: 30px; font-weight: 800; line-height: 1.0;
+.kpi-value { font-size: 32px; font-weight: 800; line-height: 1.05;
   letter-spacing: -0.5px; }
-.kpi-label { font-size: 12px; color: var(--muted); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.4px; }
+.kpi-label { font-size: 12.5px; color: var(--muted); margin-top: 8px;
+  font-weight: 500; }
 
 /* --- Chart rows + panels --- */
 .chart-row { display: flex; flex-wrap: wrap; gap: 20px; }

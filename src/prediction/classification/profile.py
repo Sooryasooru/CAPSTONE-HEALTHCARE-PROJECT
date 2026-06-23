@@ -34,9 +34,10 @@ BEST_MODELS_FILE = MODELS_DIR / "best_models.json"
 
 # Human-readable labels for the risk panel.
 RISK_LABELS = {
-    "readmission": "30-day readmission risk",
-    "mortality": "30-day mortality risk",
-    "high_cost": "High-cost stay risk",
+    "readmission": "Readmission",
+    "mortality": "Mortality",
+    "high_cost": "High-cost stay",
+    "deterioration": "Deterioration",   # <- add this line
 }
 
 
