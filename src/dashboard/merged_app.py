@@ -31,6 +31,7 @@ from dash import Dash, Input, Output, State, dcc, html, dash_table, no_update
 from analytics import engine
 from etl.utils import get_logger
 from prediction.classification import profile
+from prediction.classification import evaluate as cls_evaluate
 from prediction.classification.features import get_features
 from prediction.forecast import forecast_admissions
 from prediction.planning import build_planning
@@ -265,6 +266,42 @@ def risk_panel_figure(index: int) -> go.Figure:
     return fig
 
 
+# --- Confusion matrix panel (model evaluation — best model per risk) --------
+def _eval_table():
+    """Evaluate all models once and cache the result (12 model loads).
+
+    Cached in module memory so the dropdown re-renders instantly instead of
+    re-evaluating on every change.
+    """
+    if "eval_table" not in _CACHE:
+        logger.info("Evaluating all risk models (first access)")
+        table = cls_evaluate.evaluate_all()
+        _CACHE["eval_table"] = table
+        _CACHE["eval_best"] = cls_evaluate.best_per_risk(table)
+    return _CACHE["eval_best"]
+
+
+def confusion_figure(risk: str) -> go.Figure:
+    """Confusion-matrix heatmap for one risk's best model (cached eval)."""
+    best = _eval_table()
+    row = best[best["risk"] == risk].iloc[0]
+    tn, fp, fn, tp = int(row["TN"]), int(row["FP"]), int(row["FN"]), int(row["TP"])
+    # z laid out to match labels: rows = actual, cols = predicted
+    z = [[tn, fp], [fn, tp]]
+    labels_text = [[f"True Negative<br>{tn}", f"False Positive<br>{fp}"],
+                   [f"False Negative<br>{fn}", f"True Positive<br>{tp}"]]
+    fig = go.Figure(go.Heatmap(
+        z=z, x=["Predicted: No", "Predicted: Yes"],
+        y=["Actual: No risk", "Actual: At risk"],
+        text=labels_text, texttemplate="%{text}", textfont=dict(size=13),
+        colorscale=[[0, "#EAF1F3"], [1, TEAL]], showscale=False,
+        hovertemplate="%{y} / %{x}: %{z}<extra></extra>"))
+    apply_theme(fig, title=f"Confusion matrix — {risk} (best: {row['model']})",
+                height=360)
+    fig.update_yaxes(autorange="reversed")
+    return fig
+
+
 # --- Patient 360 (flagship — connected journey) ----------------------------
 def patient_journey_figure(patient_id: str) -> go.Figure:
     """One patient's journey summary — encounters, conditions, procedures."""
@@ -370,6 +407,30 @@ def build_analytics_layout() -> html.Div:
                 "targets (e.g. mortality) are disclosed, not hidden.",
             ]),
         ]),
+
+        html.Div(className="section-label",
+                 children="Model evaluation · confusion matrix"),
+        html.Div(className="drill-controls", children=[
+            html.Label("Select risk target", className="control-label"),
+            dcc.Dropdown(
+                id="cm-select",
+                options=[{"label": t.replace("_", " ").title(), "value": t}
+                         for t in cls_evaluate.TARGETS],
+                value=cls_evaluate.TARGETS[0], clearable=False,
+                className="dropdown"),
+        ]),
+        html.Div(className="drill-panel", children=[
+            dcc.Graph(id="cm-chart"),
+            html.Div(className="drill-note", children=[
+                "Confusion matrix for the best model per target, on a held-out "
+                "test split (same split used in training). It shows where the "
+                "model is wrong: a False Negative (a genuinely at-risk patient "
+                "marked safe) is the costliest error in a clinical setting — far "
+                "worse than a False Positive (a precautionary false alarm). This "
+                "is shown openly so performance can be judged honestly, not just "
+                "by a single headline score.",
+            ]),
+        ]),
     ])
 
 
@@ -393,6 +454,16 @@ def update_risk(index: int) -> go.Figure:
     """Rebuild the risk panel for the selected inpatient stay."""
     logger.info("Risk panel for stay #%s", index)
     return risk_panel_figure(index)
+
+
+@app.callback(
+    Output("cm-chart", "figure"),
+    Input("cm-select", "value"),
+)
+def update_confusion(risk: str) -> go.Figure:
+    """Rebuild the confusion matrix for the selected risk target."""
+    logger.info("Confusion matrix for %s", risk)
+    return confusion_figure(risk)
 
 
 # ===========================================================================
@@ -1073,3 +1144,4 @@ def render_tab(tab: str) -> html.Div:
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
