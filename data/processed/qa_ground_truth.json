@@ -1,0 +1,95 @@
+{
+  "description": "Ground-truth question set for HAIP RAG evaluation. Each question has a clear answer in a specific NICE guideline present in the knowledge base. 'relevant_doc_ids' lists the doc_id(s) that SHOULD be retrieved; retrieval is scored by whether the system surfaces one of them in its results. Questions are hand-written from real corpus titles - true ground truth, not synthetic.",
+  "questions": [
+    {
+      "id": "q01",
+      "question": "What is recommended for preventing migraine with rimegepant?",
+      "relevant_doc_ids": ["7e942ad6eabe34289cbc791e0655f79d3c439fe8"],
+      "topic": "migraine prevention"
+    },
+    {
+      "id": "q02",
+      "question": "How is acute heart failure diagnosed and managed?",
+      "relevant_doc_ids": ["06d1859543765cb4157e7205717c71be28be2a3b"],
+      "topic": "acute heart failure"
+    },
+    {
+      "id": "q03",
+      "question": "How should delirium be prevented and managed in hospital patients?",
+      "relevant_doc_ids": ["b6a3e92c6f7ced02d0ae905ae333191f9c75e52d"],
+      "topic": "delirium"
+    },
+    {
+      "id": "q04",
+      "question": "What is the treatment for severe active granulomatosis with polyangiitis using avacopan?",
+      "relevant_doc_ids": ["7b98403ccc4cf5b3564f65c98bcf1474392edff7"],
+      "topic": "granulomatosis with polyangiitis"
+    },
+    {
+      "id": "q05",
+      "question": "How is hyperkalaemia treated with sodium zirconium cyclosilicate?",
+      "relevant_doc_ids": ["a569cc1adf2fb659b21e15cb7f96baa47bdf5fc7"],
+      "topic": "hyperkalaemia"
+    },
+    {
+      "id": "q06",
+      "question": "What surgical option exists for advanced ovarian cancer?",
+      "relevant_doc_ids": ["0483c5066e5d4e35442aba33392a8cb8ef3a5077"],
+      "topic": "ovarian cancer surgery"
+    },
+    {
+      "id": "q07",
+      "question": "How is advanced non-small-cell lung cancer with MET alterations treated with tepotinib?",
+      "relevant_doc_ids": ["44f05e4b1760033a1e2e9c68f3ccf1dcff2f131e"],
+      "topic": "non-small-cell lung cancer"
+    },
+    {
+      "id": "q08",
+      "question": "What treatment is recommended for untreated advanced renal cell carcinoma using nivolumab with ipilimumab?",
+      "relevant_doc_ids": ["48b6416063a9e9973c61a4bd34ca2e8a6335dcda"],
+      "topic": "renal cell carcinoma"
+    },
+    {
+      "id": "q09",
+      "question": "What is upadacitinib used to treat?",
+      "relevant_doc_ids": ["5f52bb5bf021baa7a9564b9e9d36370170cbcc6e"],
+      "topic": "upadacitinib indication"
+    },
+    {
+      "id": "q10",
+      "question": "How are symptomatic vitreous floaters treated with YAG laser vitreolysis?",
+      "relevant_doc_ids": ["c1d8b48336eae4f35babe1ced72cce0a32e93642"],
+      "topic": "vitreous floaters"
+    },
+    {
+      "id": "q11",
+      "question": "What is the procedure for endoscopic balloon dilation of subglottic or tracheal stenosis?",
+      "relevant_doc_ids": ["360b56c23e3c5d83840a3a0bce8af2053582dce6"],
+      "topic": "tracheal stenosis"
+    },
+    {
+      "id": "q12",
+      "question": "How is relapsed multiple myeloma treated with ixazomib, lenalidomide and dexamethasone?",
+      "relevant_doc_ids": ["0d94a4ead190055657fd5266144eb686882d75ed"],
+      "topic": "multiple myeloma"
+    },
+    {
+      "id": "q13",
+      "question": "What treatment is used for non-muscle-invasive bladder cancer with Synergo?",
+      "relevant_doc_ids": ["3da66e25e1647f85bfeceb093efa3598e7de33d8"],
+      "topic": "bladder cancer"
+    },
+    {
+      "id": "q14",
+      "question": "What is intramuscular diaphragm stimulation used for in ventilator-dependent patients?",
+      "relevant_doc_ids": ["86850d67a2fa2b5ab6ec6eaf2b662d6baaaa9fa0"],
+      "topic": "diaphragm stimulation"
+    },
+    {
+      "id": "q15",
+      "question": "How is adjuvant treatment of invasive urothelial cancer with nivolumab handled?",
+      "relevant_doc_ids": ["990ba0d997dda25800b9050edf4e3251d5e4efa0"],
+      "topic": "urothelial cancer"
+    }
+  ]
+}
