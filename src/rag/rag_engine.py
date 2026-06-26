@@ -5,12 +5,15 @@ HAIP Week 3 - RAG Engine
 The full Retrieval-Augmented Generation loop:
 
     question
+        -> safety check (emergency redirect before any retrieval)
         -> Retriever (retrieve + re-rank)  -> top passages
         -> build a grounded prompt (answer ONLY from context)
         -> LLM (Gemini by default; Claude / OpenAI swappable)
         -> answer + citations + latency
 
 Honest-engineering guards:
+    * A safety net redirects medical emergencies and mental-health crises
+      BEFORE any retrieval or LLM call (see safety.py).
     * The prompt instructs the model to answer ONLY from the retrieved
       context and to say so when the answer is not present. This prevents
       invented clinical facts (e.g. fabricated drug doses).
@@ -46,6 +49,7 @@ import time
 from dotenv import load_dotenv
 
 from src.rag.retriever import Retriever
+from src.rag.safety import safety_check
 
 load_dotenv()
 
@@ -165,9 +169,16 @@ class RAGEngine:
             question, answer, citations (list), passages (raw retrieved),
             latency_seconds.
         """
+        # Safety net: redirect emergencies before any retrieval/LLM call.
+        flagged = safety_check(question)
+        if flagged is not None:
+            logger.warning("Safety redirect: %s", flagged["safety_flag"])
+            return flagged
+
         start = time.time()
 
         passages = self.retriever.retrieve(question)
+
         if not passages:
             return {
                 "question": question,
