@@ -33,3 +33,7 @@ data/raw/
 *.joblib
 *.pkl
 *.bak.*
+data/hospitals/
+data/processed/faiss.index
+data/processed/knowledge_base.jsonl
+*.pdf
