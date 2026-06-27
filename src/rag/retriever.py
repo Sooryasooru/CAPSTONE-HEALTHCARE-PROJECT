@@ -61,12 +61,13 @@ logger = logging.getLogger("retriever")
 class Retriever:
     """Loads the index + metadata + models and serves ranked passages."""
 
-    def __init__(self) -> None:
-        logger.info("Loading FAISS index from %s", INDEX_PATH)
-        self.index = faiss.read_index(INDEX_PATH)
+    def __init__(self, index_path: str = INDEX_PATH,
+                 metadata_path: str = METADATA_PATH) -> None:
+        logger.info("Loading FAISS index from %s", index_path)
+        self.index = faiss.read_index(index_path)
 
-        logger.info("Loading chunk metadata from %s", METADATA_PATH)
-        with open(METADATA_PATH, "rb") as f:
+        logger.info("Loading chunk metadata from %s", metadata_path)
+        with open(metadata_path, "rb") as f:
             self.chunks: list[dict] = pickle.load(f)
 
         if self.index.ntotal != len(self.chunks):
@@ -162,3 +163,4 @@ if __name__ == "__main__":
         print(f"    retrieval={hit['retrieval_score']:.3f}  "
               f"rerank={hit['rerank_score']:.3f}")
         print(f"    {hit['text'][:200].strip()}...")
+        

@@ -91,9 +91,10 @@ SYSTEM_PROMPT = (
 class RAGEngine:
     """Ties retrieval to generation and returns grounded, cited answers."""
 
-    def __init__(self, provider: str = LLM_PROVIDER) -> None:
+    def __init__(self, provider: str = LLM_PROVIDER,
+                 retriever: Retriever | None = None) -> None:
         self.provider = provider
-        self.retriever = Retriever()
+        self.retriever = retriever if retriever is not None else Retriever()
         self._client = None          # lazily created on first call
         logger.info("RAG engine ready (provider=%s)", provider)
 
@@ -221,3 +222,4 @@ if __name__ == "__main__":
     for i, c in enumerate(result["citations"], 1):
         print(f"  [{i}] {c}")
     print(f"\nLatency: {result['latency_seconds']}s")
+    
