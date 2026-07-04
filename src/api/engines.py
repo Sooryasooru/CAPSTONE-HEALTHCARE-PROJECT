@@ -11,6 +11,7 @@ Engines are added one at a time and tested in isolation:
 import pandas as pd
 
 from analytics import engine as analytics_engine
+from prediction.forecast import forecast_admissions
 
 
 def _analytics_answer(question: str) -> dict:
@@ -41,6 +42,27 @@ def _analytics_answer(question: str) -> dict:
     }
 
 
+def _prediction_answer(question: str) -> dict:
+    """6-month admissions forecast (Holt-Winters on the monthly series).
+
+    Honest disclosure: this is a statistical projection on synthetic data,
+    not a guarantee. Values are point forecasts, no confidence band shown.
+    """
+    df = forecast_admissions(6)
+    points = [
+        {"month": row["month"].strftime("%Y-%m"), "forecast": int(row["forecast"])}
+        for _, row in df.iterrows()
+    ]
+    return {
+        "engine": "prediction",
+        "answer_type": "admissions_forecast",
+        "horizon_months": len(points),
+        "forecast": points,
+        "method": "Holt-Winters exponential smoothing",
+        "note": "Point forecast on synthetic data. A projection, not a guarantee.",
+    }
+
+
 def run_engine(engine_name: str, question: str) -> dict:
     """Call the chosen engine and return its digest.
 
@@ -49,6 +71,9 @@ def run_engine(engine_name: str, question: str) -> dict:
     """
     if engine_name == "analytics":
         return _analytics_answer(question)
+
+    if engine_name == "prediction":
+        return _prediction_answer(question)
 
     # prediction and rag are wired in later steps.
     return {
