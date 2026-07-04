@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from api.router import route
+from api.engines import run_engine
 
 app = FastAPI(title="HAIP API", version="0.1.0")
 
@@ -24,10 +25,12 @@ class RouteRequest(BaseModel):
 
 @app.post("/route")
 def route_question(req: RouteRequest):
-    """Return the routing decision for a question.
+    """Route a question and return both the decision and the engine's answer.
 
-    This only DECIDES which engine should handle the question — it does not
-    call the engine yet. The decision dict is fully transparent (engine,
-    confidence, matched keywords, reason).
+    Full path: question -> routing decision -> engine call -> answer.
+    The decision (engine, confidence, matched, reason) stays visible alongside
+    the answer, so routing is never a black box.
     """
-    return route(req.question)
+    decision = route(req.question)
+    answer = run_engine(decision["engine"], req.question)
+    return {"decision": decision, "answer": answer}
