@@ -13,6 +13,10 @@ import pandas as pd
 from analytics import engine as analytics_engine
 from prediction.forecast import forecast_admissions
 
+# RAG engine is heavy (loads an embedding model). Cache it module-level so it
+# loads ONCE, on the first RAG question — never per request, never at startup.
+_rag_engine = None
+
 
 def _analytics_answer(question: str) -> dict:
     """Digest of admissions: overall totals by encounter class, recent window.
@@ -63,6 +67,52 @@ def _prediction_answer(question: str) -> dict:
     }
 
 
+def _get_rag_engine():
+    """Construct the RAG engine once and cache it. Loads the model lazily."""
+    global _rag_engine
+    if _rag_engine is None:
+        from rag.rag_engine import RAGEngine
+        _rag_engine = RAGEngine()
+    return _rag_engine
+
+
+def _rag_answer(question: str) -> dict:
+    """Answer from the guideline knowledge base (retrieval + LLM).
+
+    Digests the engine output: keeps the answer, citations, and latency;
+    trims full passages to a count. Fails gracefully if the LLM key is absent
+    so the endpoint never hard-crashes during a demo.
+    """
+    import os
+
+    if not os.environ.get("GEMINI_API_KEY"):
+        return {
+            "engine": "rag",
+            "answer_type": "unavailable",
+            "note": "RAG needs GEMINI_API_KEY set. Retrieval works, but the "
+                    "answer step is disabled without it.",
+        }
+
+    try:
+        engine = _get_rag_engine()
+        result = engine.answer(question)
+        return {
+            "engine": "rag",
+            "answer_type": "grounded_answer",
+            "answer": result.get("answer", ""),
+            "citations": result.get("citations", []),
+            "passages_used": len(result.get("passages", [])),
+            "latency_seconds": result.get("latency_seconds"),
+            "note": "Answer grounded in retrieved guidelines (WHO/CDC/NICE corpus).",
+        }
+    except Exception as exc:
+        return {
+            "engine": "rag",
+            "answer_type": "error",
+            "note": f"RAG failed: {type(exc).__name__}: {exc}",
+        }
+
+
 def run_engine(engine_name: str, question: str) -> dict:
     """Call the chosen engine and return its digest.
 
@@ -74,6 +124,9 @@ def run_engine(engine_name: str, question: str) -> dict:
 
     if engine_name == "prediction":
         return _prediction_answer(question)
+
+    if engine_name == "rag":
+        return _rag_answer(question)
 
     # prediction and rag are wired in later steps.
     return {
