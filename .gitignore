@@ -37,3 +37,5 @@ data/hospitals/
 data/processed/faiss.index
 data/processed/knowledge_base.jsonl
 *.pdf
+data/auth.db
+*.db
