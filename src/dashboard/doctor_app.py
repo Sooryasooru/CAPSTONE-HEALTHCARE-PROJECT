@@ -55,7 +55,12 @@ OUTCOMES = {
 # Kept simple: a coloured dot label, no external icon dependency.
 
 app = Dash(__name__, suppress_callback_exceptions=True)
-app.title = "HAIP — Provider Performance"
+
+# allow this dashboard to be embedded in an iframe (React app)
+@app.server.after_request
+def _allow_iframe(response):
+    response.headers.pop("X-Frame-Options", None)
+    return response
 
 
 # ===========================================================================

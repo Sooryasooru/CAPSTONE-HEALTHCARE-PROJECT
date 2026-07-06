@@ -41,7 +41,12 @@ OUTCOME_COLOURS = {"Alive": GREEN, "Deceased": RED}
 RISK_COLOURS = {"readmission": AMBER, "mortality": RED, "high_cost": TEAL}
 
 app = Dash(__name__)
-app.title = "HAIP — Clinical Analytics"
+
+# allow this dashboard to be embedded in an iframe (React app)
+@app.server.after_request
+def _allow_iframe(response):
+    response.headers.pop("X-Frame-Options", None)
+    return response
 
 # Patient 360 is read once at startup for KPIs and the journey panel.
 _P360 = engine.get_patient_360()
