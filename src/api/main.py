@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from api.router import route
 from api.engines import run_engine
+from api.auth_routes import router as auth_router
 
 app = FastAPI(title="HAIP API", version="0.1.0")
 
@@ -24,6 +25,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
+app.include_router(auth_router)
 
 
 @app.get("/health")
