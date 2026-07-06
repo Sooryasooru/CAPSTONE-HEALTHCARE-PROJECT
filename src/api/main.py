@@ -9,6 +9,10 @@ from pydantic import BaseModel
 from api.router import route
 from api.engines import run_engine
 from api.auth_routes import router as auth_router
+import pandas as pd
+from pathlib import Path
+
+DOCTORS_CSV = Path(__file__).resolve().parents[2] / "data" / "samples" / "hospital_doctors_large.csv"
 
 app = FastAPI(title="HAIP API", version="0.1.0")
 
@@ -53,3 +57,28 @@ def route_question(req: RouteRequest):
     decision = route(req.question)
     answer = run_engine(decision["engine"], req.question)
     return {"decision": decision, "answer": answer}
+
+
+@app.get("/doctors")
+def list_doctors():
+    """Provider directory grouped by department for the Doctors screen.
+    Reads the sample dataset; O/E scoring is layered on in a later step.
+    """
+    df = pd.read_csv(DOCTORS_CSV)
+
+    def clean(v):
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return None
+        return v
+
+    depts = {}
+    for _, r in df.iterrows():
+        enc = r["encounters"]
+        enc = int(enc) if pd.notna(enc) else 0
+        dept = clean(r["department"]) or "Unassigned"
+        depts.setdefault(dept, []).append({
+            "name": clean(r["doctor_name"]),
+            "specialty": clean(r["specialty"]),
+            "encounters": enc,
+        })
+    return {"departments": depts, "total": int(len(df))}
