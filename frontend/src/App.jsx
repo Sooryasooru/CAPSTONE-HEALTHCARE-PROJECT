@@ -4,6 +4,7 @@ import Login from "./screens/Login";
 import Select from "./screens/Select";
 import HospitalData from "./screens/HospitalData";
 import Doctors from "./screens/Doctors";
+import Knowledge from "./screens/Knowledge";
 import "./App.css";
 
 // The whole product flow is driven by one piece of state: `screen`.
@@ -41,7 +42,7 @@ export default function App() {
       {screen === "select" && <Select nav={nav} />}
       {screen === "hospital" && <HospitalData nav={nav} back="select" />}
       {screen === "doctors" && <Doctors nav={nav} back="select" />}
-      {screen === "knowledge" && <Placeholder title="Knowledge base" nav={nav} back="select" />}
+      {screen === "knowledge" && <Knowledge nav={nav} back="select" />}
 
       {!isAuth && (
         <footer className="haip-footer">
