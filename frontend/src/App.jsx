@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Register from "./screens/Register";
+import Login from "./screens/Login";
 import "./App.css";
 
 // The whole product flow is driven by one piece of state: `screen`.
@@ -33,7 +34,7 @@ export default function App() {
       {!isAuth && <Header session={session} onLogout={logout} />}
 
       {screen === "register" && <Register nav={nav} />}
-      {screen === "login" && <Placeholder title="Login" nav={nav} back="register" />}
+      {screen === "login" && <Login nav={nav} onLogin={login} />}
       {screen === "select" && <Placeholder title="Select a section" nav={nav} />}
       {screen === "hospital" && <Placeholder title="Hospital data" nav={nav} back="select" />}
       {screen === "doctors" && <Placeholder title="Doctors" nav={nav} back="select" />}
