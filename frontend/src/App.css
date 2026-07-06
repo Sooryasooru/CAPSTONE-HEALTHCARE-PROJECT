@@ -820,3 +820,14 @@ body {
   border-top: 1px solid var(--line);
   color: var(--muted);
 }
+
+/* auth error message (login/register) */
+.auth-error {
+  background: rgba(229,97,91,0.12);
+  border: 1px solid rgba(229,97,91,0.4);
+  color: #f2b8b5;
+  padding: 11px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}

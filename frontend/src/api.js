@@ -22,3 +22,25 @@ export async function checkHealth() {
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }
+
+// --- auth ---
+
+export async function registerHospital(hospital_name, username, password) {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hospital_name, username, password }),
+  });
+  if (!res.ok) throw new Error(`Backend responded ${res.status}`);
+  return res.json(); // { success, message }
+}
+
+export async function loginHospital(username, password) {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) throw new Error(`Backend responded ${res.status}`);
+  return res.json(); // { success, hospital, message? }
+}

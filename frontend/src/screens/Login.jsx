@@ -1,17 +1,34 @@
 import { useState } from "react";
+import { loginHospital } from "../api";
 
-// Login screen — Option B style, mirrors Register.
+// Login screen — Option B style. Wired to the real backend:
+// verifies credentials via /auth/login and rejects bad passwords.
 
 export default function Login({ nav, onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [file, setFile] = useState(null);
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   const valid = username.trim() && password.length > 0;
 
-  function submit() {
-    if (!valid) return;
-    onLogin({ hospital: username, username });
+  async function submit() {
+    if (!valid || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await loginHospital(username, password);
+      if (res.success) {
+        onLogin({ hospital: res.hospital, username });
+      } else {
+        setError(res.message || "Invalid username or password.");
+      }
+    } catch (e) {
+      setError("Can't reach the backend. Start it with: uvicorn api.main:app --port 8000");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -40,7 +57,7 @@ export default function Login({ nav, onLogin }) {
           </header>
 
           <FloatField label="Admin username" value={username} onChange={setUsername} placeholder="username" />
-          <FloatField label="Password" type="password" value={password} onChange={setPassword} placeholder="password" />
+          <FloatField label="Password" type="password" value={password} onChange={setPassword} placeholder="password" onEnter={submit} />
 
           <label className="file-drop dark-drop">
             <input type="file" accept=".pdf,.docx,.txt" onChange={(e) => setFile(e.target.files[0] || null)} hidden />
@@ -48,8 +65,10 @@ export default function Login({ nav, onLogin }) {
             <span className="file-drop-text">{file ? file.name : "Click to choose a document"}</span>
           </label>
 
-          <button className="ask-btn auth-submit" onClick={submit} disabled={!valid}>
-            Sign in
+          {error && <div className="auth-error">{error}</div>}
+
+          <button className="ask-btn auth-submit" onClick={submit} disabled={!valid || busy}>
+            {busy ? "Signing in…" : "Sign in"}
           </button>
 
           <div className="auth-alt">
@@ -62,11 +81,18 @@ export default function Login({ nav, onLogin }) {
   );
 }
 
-function FloatField({ label, value, onChange, placeholder, type = "text" }) {
+function FloatField({ label, value, onChange, placeholder, type = "text", onEnter }) {
   return (
     <div className="float-field">
       <span className="float-label">{label}</span>
-      <input className="float-input" type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <input
+        className="float-input"
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onEnter && onEnter()}
+        placeholder={placeholder}
+      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { registerHospital } from "../api";
 
-// Register screen — Option B: split layout, floating labels inside dark fields.
+// Register screen — Option B. Wired to the backend: creates the account
+// via /auth/register, then moves to login on success.
 
 export default function Register({ nav }) {
   const [hospital, setHospital] = useState("");
@@ -8,6 +10,8 @@ export default function Register({ nav }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [file, setFile] = useState(null);
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   const pwMismatch = confirm.length > 0 && password !== confirm;
   const valid =
@@ -16,9 +20,22 @@ export default function Register({ nav }) {
     password.length >= 6 &&
     password === confirm;
 
-  function submit() {
-    if (!valid) return;
-    nav("login");
+  async function submit() {
+    if (!valid || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await registerHospital(hospital, username, password);
+      if (res.success) {
+        nav("login");
+      } else {
+        setError(res.message || "Registration failed.");
+      }
+    } catch (e) {
+      setError("Can't reach the backend. Start it with: uvicorn api.main:app --port 8000");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -62,8 +79,10 @@ export default function Register({ nav }) {
             <span className="file-drop-text">{file ? file.name : "Click to choose a document"}</span>
           </label>
 
-          <button className="ask-btn auth-submit" onClick={submit} disabled={!valid}>
-            Create account
+          {error && <div className="auth-error">{error}</div>}
+
+          <button className="ask-btn auth-submit" onClick={submit} disabled={!valid || busy}>
+            {busy ? "Creating…" : "Create account"}
           </button>
 
           <div className="auth-alt">
