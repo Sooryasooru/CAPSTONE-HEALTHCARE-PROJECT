@@ -44,3 +44,9 @@ export async function loginHospital(username, password) {
   if (!res.ok) throw new Error(`Backend responded ${res.status}`);
   return res.json(); // { success, hospital, message? }
 }
+
+export async function fetchDoctors() {
+  const res = await fetch(`${API_BASE}/doctors`);
+  if (!res.ok) throw new Error(`Backend responded ${res.status}`);
+  return res.json(); // { departments: {dept: [{name, specialty, encounters}]}, total }
+}

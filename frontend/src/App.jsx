@@ -3,6 +3,7 @@ import Register from "./screens/Register";
 import Login from "./screens/Login";
 import Select from "./screens/Select";
 import HospitalData from "./screens/HospitalData";
+import Doctors from "./screens/Doctors";
 import "./App.css";
 
 // The whole product flow is driven by one piece of state: `screen`.
@@ -39,7 +40,7 @@ export default function App() {
       {screen === "login" && <Login nav={nav} onLogin={login} />}
       {screen === "select" && <Select nav={nav} />}
       {screen === "hospital" && <HospitalData nav={nav} back="select" />}
-      {screen === "doctors" && <Placeholder title="Doctors" nav={nav} back="select" />}
+      {screen === "doctors" && <Doctors nav={nav} back="select" />}
       {screen === "knowledge" && <Placeholder title="Knowledge base" nav={nav} back="select" />}
 
       {!isAuth && (
