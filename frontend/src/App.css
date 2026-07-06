@@ -831,3 +831,50 @@ body {
   font-size: 13px;
   margin-bottom: 14px;
 }
+
+/* ---- Hospital data screen ---- */
+.ask-input {
+  width: 100%;
+  max-width: 560px;
+  margin: 14px 0 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--ink);
+  resize: vertical;
+}
+.ask-input:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.route-result {
+  width: 100%;
+  max-width: 560px;
+  margin: 18px auto 0;
+  text-align: left;
+}
+.route-decision {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--ink);
+}
+.route-reason {
+  color: var(--muted);
+  font-size: 0.9em;
+  margin-top: 4px;
+}
+.route-answer {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.9em;
+  color: var(--ink);
+}
