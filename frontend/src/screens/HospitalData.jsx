@@ -28,7 +28,7 @@ export default function HospitalData({ nav, back }) {
     <main className="haip-main">
       <div className="placeholder">
         <h2>Hospital data</h2>
-        <p>HOSPITAL SCREEN IS LIVE</p>
+        <p>Ask about admissions, forecasts, and analytics.</p>
 
         <textarea
           className="ask-input"
