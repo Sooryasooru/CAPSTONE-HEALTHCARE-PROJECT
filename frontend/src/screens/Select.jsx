@@ -1,13 +1,13 @@
-// Select screen — the three-card chooser after login.
-// Design 3: tall cards, colored top accent, circular icon, lift on hover.
-
+// Select screen — Option C: navy sidebar + light card list.
+// Echoes the auth split-screen layout so the section screen ties
+// visually to the Register/Login pages (navy + teal).
 const CARDS = [
   {
     id: "hospital",
     accent: "var(--teal)",
     tint: "rgba(15,181,166,0.15)",
     title: "Hospital data",
-    desc: "Admissions, forecasts, and analytics for your hospital.",
+    desc: "Admissions, forecasts, and analytics.",
     icon: "M4 20V10M10 20V4M16 20v-7M20 20H2",
   },
   {
@@ -30,29 +30,32 @@ const CARDS = [
 
 export default function Select({ nav }) {
   return (
-    <main className="haip-main select-main">
-      <div className="select-head">
+    <main className="haip-main select-c">
+      <aside className="select-c-rail">
+        <div className="select-c-mark">HAIP</div>
         <h2>Choose a section</h2>
         <p>Everything for your hospital, behind one door.</p>
-      </div>
+      </aside>
 
-      <div className="cards">
+      <div className="select-c-list">
         {CARDS.map((c) => (
           <button
             key={c.id}
-            className="card"
+            className="c-row"
             style={{ "--accent": c.accent, "--tint": c.tint }}
             onClick={() => nav(c.id)}
           >
-            <span className="card-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+            <span className="c-row-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2"
                    strokeLinecap="round" strokeLinejoin="round">
                 <path d={c.icon} />
               </svg>
             </span>
-            <span className="card-title">{c.title}</span>
-            <span className="card-desc">{c.desc}</span>
+            <span className="c-row-text">
+              <span className="c-row-title">{c.title}</span>
+              <span className="c-row-desc">{c.desc}</span>
+            </span>
           </button>
         ))}
       </div>
