@@ -660,3 +660,163 @@ body {
 .dark-form .auth-alt { color: #8fa1b3; }
 .dark-form .field-hint { color: #8fa1b3; }
 .dark-form .error-hint { color: var(--red); }
+
+/* ---- select screen: three cards (Design 3) ---- */
+.select-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 900px;
+}
+.select-head { text-align: center; margin-bottom: 36px; }
+.select-head h2 {
+  color: #fff;
+  font-size: 26px;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.select-head p {
+  color: #8fa1b3;
+  font-size: 14px;
+  margin: 0;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  width: 100%;
+}
+.card {
+  background: var(--slate-2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: 3px solid var(--accent);
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  font-family: inherit;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+  border-color: rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+}
+.card:active { transform: translateY(-2px); }
+.card-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  transition: transform 0.2s ease;
+}
+.card:hover .card-icon { transform: scale(1.08); }
+.card-title {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.card-desc {
+  color: #8fa1b3;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .cards { grid-template-columns: 1fr; }
+}
+
+/* ---- Theme C: light body, dark header kept ---- */
+/* The logged-in area (not auth screens) gets a light background. */
+.haip { background: #eef2f6; }
+
+/* keep the header dark and full-width */
+.haip-header {
+  background: var(--slate);
+}
+
+/* light main area, fills the space */
+.haip-main.select-main {
+  flex: 1;
+  justify-content: center;
+  max-width: 960px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.select-head h2 { color: var(--slate); }
+.select-head p { color: var(--muted); }
+
+/* cards become light on Theme C */
+.card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  box-shadow: 0 6px 18px rgba(15,27,42,0.06);
+}
+.card:hover {
+  box-shadow: 0 16px 36px rgba(15,27,42,0.13);
+  border-color: var(--line);
+  border-top-color: var(--accent);
+}
+.card-title { color: var(--slate); }
+.card-desc { color: var(--muted); }
+
+/* footer on light body */
+.haip-footer {
+  background: #eef2f6;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* ---- Theme C: light body, dark header kept ---- */
+/* The logged-in area (not auth screens) gets a light background. */
+.haip { background: #eef2f6; }
+
+/* keep the header dark and full-width */
+.haip-header {
+  background: var(--slate);
+}
+
+/* light main area, fills the space */
+.haip-main.select-main {
+  flex: 1;
+  justify-content: center;
+  max-width: 960px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.select-head h2 { color: var(--slate); }
+.select-head p { color: var(--muted); }
+
+/* cards become light on Theme C */
+.card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  box-shadow: 0 6px 18px rgba(15,27,42,0.06);
+}
+.card:hover {
+  box-shadow: 0 16px 36px rgba(15,27,42,0.13);
+  border-color: var(--line);
+  border-top-color: var(--accent);
+}
+.card-title { color: var(--slate); }
+.card-desc { color: var(--muted); }
+
+/* footer on light body */
+.haip-footer {
+  background: #eef2f6;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}

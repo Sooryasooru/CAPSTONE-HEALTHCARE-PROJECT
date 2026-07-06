@@ -1,0 +1,61 @@
+// Select screen — the three-card chooser after login.
+// Design 3: tall cards, colored top accent, circular icon, lift on hover.
+
+const CARDS = [
+  {
+    id: "hospital",
+    accent: "var(--teal)",
+    tint: "rgba(15,181,166,0.15)",
+    title: "Hospital data",
+    desc: "Admissions, forecasts, and analytics for your hospital.",
+    icon: "M4 20V10M10 20V4M16 20v-7M20 20H2",
+  },
+  {
+    id: "doctors",
+    accent: "#4f8ff0",
+    tint: "rgba(79,143,240,0.15)",
+    title: "Doctors",
+    desc: "Browse providers and their details.",
+    icon: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6",
+  },
+  {
+    id: "knowledge",
+    accent: "#b07de0",
+    tint: "rgba(176,125,224,0.15)",
+    title: "Knowledge base",
+    desc: "Ask questions of your clinical guidelines.",
+    icon: "M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5zM19 3v18",
+  },
+];
+
+export default function Select({ nav }) {
+  return (
+    <main className="haip-main select-main">
+      <div className="select-head">
+        <h2>Choose a section</h2>
+        <p>Everything for your hospital, behind one door.</p>
+      </div>
+
+      <div className="cards">
+        {CARDS.map((c) => (
+          <button
+            key={c.id}
+            className="card"
+            style={{ "--accent": c.accent, "--tint": c.tint }}
+            onClick={() => nav(c.id)}
+          >
+            <span className="card-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2"
+                   strokeLinecap="round" strokeLinejoin="round">
+                <path d={c.icon} />
+              </svg>
+            </span>
+            <span className="card-title">{c.title}</span>
+            <span className="card-desc">{c.desc}</span>
+          </button>
+        ))}
+      </div>
+    </main>
+  );
+}
