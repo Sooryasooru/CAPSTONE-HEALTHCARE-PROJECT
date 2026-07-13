@@ -26,6 +26,14 @@ const CARDS = [
     desc: "Ask questions of your clinical guidelines.",
     icon: "M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5zM19 3v18",
   },
+  {
+    id: "askhaip",
+    accent: "#f0a54f",
+    tint: "rgba(240,165,79,0.15)",
+    title: "Ask HAIP",
+    desc: "Chat with the AI clinical agent.",
+    icon: "M12 2a10 10 0 100 20 10 10 0 000-20zM8 10h8M8 14h5",
+  },
 ];
 
 export default function Select({ nav }) {

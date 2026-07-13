@@ -37,8 +37,8 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 # Configuration
 # --------------------------------------------------------------------------- #
 
-INDEX_PATH = "data/processed/faiss.index"
-METADATA_PATH = "data/processed/chunks.pkl"
+INDEX_PATH = "/app/data/processed/faiss.index"
+METADATA_PATH = "/app/data/processed/chunks.pkl"
 
 EMBED_MODEL = "all-MiniLM-L6-v2"               # must match embedder.py
 RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
