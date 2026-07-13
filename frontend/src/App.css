@@ -1005,3 +1005,31 @@ body {
 .doc-name { font-weight: 500; color: var(--ink); }
 .doc-spec { color: var(--muted); }
 .doc-enc { color: var(--muted); text-align: right; white-space: nowrap; }
+
+/* ---- Dash/Streamlit full-screen iframe embeds (Cards 1-3) ---- */
+.dash-fullscreen {
+  position: fixed;
+  inset: 0;
+  top: 132px;                 /* clear the haip-header */
+  background: #eef1f5;
+  z-index: 5;
+}
+.dash-fullscreen-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.dash-back {
+  position: fixed;
+  top: 90px;
+  left: 24px;
+  z-index: 10;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #1f2a3c;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
