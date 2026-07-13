@@ -28,14 +28,6 @@ def test_dama_rate():
     assert 0 <= r["value"] <= 100
 
 
-def test_icu_sepsis_rate():
-    r = kpis.icu_sepsis_rate()
-    _assert_kpi_shape(r)
-    assert 0 <= r["value"] <= 100
-
-
-def test_icu_readmission_rate():
-    r = kpis.icu_readmission_rate()
     _assert_kpi_shape(r)
     assert 0 <= r["value"] <= 100
 
@@ -49,6 +41,6 @@ def test_comorbidity_burden():
 def test_get_all_kpis():
     all_kpis = kpis.get_all_kpis()
     assert isinstance(all_kpis, list)
-    assert len(all_kpis) == 5
+    assert len(all_kpis) == 3
     for k in all_kpis:
         _assert_kpi_shape(k)

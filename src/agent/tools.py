@@ -49,7 +49,10 @@ def get_hospital_kpis() -> str:
     rate, or comorbidity burden. Returns each KPI with its value and unit.
     """
     import pandas as pd
+    import os
     CSV = "/app/data/samples/hospital_dataset.csv"
+    if not os.path.exists(CSV):
+        CSV = "data/samples/hospital_dataset.csv"
     try:
         df = pd.read_csv(CSV)
     except Exception as exc:  # noqa: BLE001
@@ -85,7 +88,10 @@ def forecast_admissions(months_ahead: int = 6) -> str:
     """
     import pandas as pd
     from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    import os
     CSV = "/app/data/samples/hospital_dataset.csv"
+    if not os.path.exists(CSV):
+        CSV = "data/samples/hospital_dataset.csv"
     try:
         df = pd.read_csv(CSV)
         df["admission_date"] = pd.to_datetime(df["admission_date"], errors="coerce")
