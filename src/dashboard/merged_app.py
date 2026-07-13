@@ -35,8 +35,8 @@ from prediction.classification import evaluate as cls_evaluate
 from prediction.classification.features import get_features
 from prediction.forecast import forecast_admissions
 from prediction.planning import build_planning
-from prediction.timeseries import build_monthly_admissions
 from dashboard.theme import (apply_theme, INK, TEAL, AMBER, RED, GREEN, MUTED)
+from summary_creation.pdf_report import build_hospital_report
 
 logger: logging.Logger = get_logger(__name__)
 
@@ -56,6 +56,12 @@ RISK_COLOURS = {
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 app.title = "HAIP — Clinical Analytics & Data Intake"
+
+# Allow this dashboard to be embedded in the React app via iframe.
+@app.server.after_request
+def _allow_iframe(response):
+    response.headers.pop("X-Frame-Options", None)
+    return response
 
 
 # ===========================================================================
@@ -782,12 +788,18 @@ def validate(n_clicks, data_json, map_values, map_ids):
                                "cursor": "pointer", "fontSize": "15px"}),
         ])
     blocks.append(proceed)
-
     # The dashboard renders here when "Build dashboard" is clicked.
     blocks.append(html.Div(id="uploaded-dashboard"))
-
+    # PDF report: download a summary of the uploaded dataset.
+    blocks.append(html.Div(style={"marginTop": "16px"}, children=[
+        html.Button("Download PDF report", id="dl-report-btn", n_clicks=0,
+                    style={"padding": "10px 24px", "background": AMBER,
+                           "color": "white", "border": "none",
+                           "borderRadius": "8px", "cursor": "pointer",
+                           "fontSize": "15px"}),
+        dcc.Download(id="report-download"),
+    ]))
     return html.Div(blocks), mapping
-
 
 def _analysis_and_prediction_ui(df):
     """Build the EDA charts + the target/feature pickers + train button."""
@@ -1142,6 +1154,42 @@ def render_tab(tab: str) -> html.Div:
     return build_analytics_layout()
 
 
+@app.callback(
+    Output("report-download", "data"),
+    Input("dl-report-btn", "n_clicks"),
+    State("data-store", "data"),
+    State("mapping-store", "data"),
+    prevent_initial_call=True,
+)
+def download_report(n_clicks, data_json, mapping):
+    """Build a PDF summary of the uploaded dataset and stream it back.
+
+    Reads the stored dataframe + column mapping, computes the same headline
+    KPIs shown on the dashboard, and hands them to build_hospital_report,
+    which returns PDF bytes for dcc.send_bytes. Nothing is invented — only
+    KPIs whose columns were mapped are included.
+    """
+    if not n_clicks or data_json is None or not mapping:
+        raise dash.exceptions.PreventUpdate
+
+    df = pd.read_json(io.StringIO(data_json), orient="split")
+
+    # Headline KPIs — same logic as _up_kpis, but as a plain dict.
+    kpis = {"Encounters": f"{len(df):,}"}
+    if mapping.get("patient_id"):
+        kpis["Unique patients"] = f"{df[mapping['patient_id']].nunique():,}"
+    if mapping.get("total_cost"):
+        cost = pd.to_numeric(df[mapping["total_cost"]], errors="coerce")
+        kpis["Total cost ($)"] = f"{cost.sum():,.0f}"
+        kpis["Avg cost / enc ($)"] = f"{cost.mean():,.0f}"
+
+    pdf_bytes = build_hospital_report(
+        kpis=kpis,
+        forecast_df=None,
+        hospital_name="Uploaded Dataset",
+    )
+    return dcc.send_bytes(pdf_bytes, "haip_report.pdf")
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
-    
+    app.run(host="0.0.0.0", port=8060, debug=True)
