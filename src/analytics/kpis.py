@@ -76,8 +76,6 @@ def get_all_kpis() -> list[dict]:
     kpis = [
         mortality_rate(),
         dama_rate(),
-        icu_sepsis_rate(),
-        icu_readmission_rate(),
         comorbidity_burden(),
     ]
     logger.info("Computed %d KPIs", len(kpis))

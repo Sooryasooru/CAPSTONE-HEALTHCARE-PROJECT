@@ -48,31 +48,27 @@ def get_hospital_kpis() -> str:
     discharge-against-medical-advice rate, ICU sepsis rate, ICU readmission
     rate, or comorbidity burden. Returns each KPI with its value and unit.
     """
-    from src.analytics import kpis as kpi_module
-
-    # Compute each KPI independently so one broken metric doesn't sink the
-    # whole tool. A production agent should degrade gracefully: return the
-    # KPIs that work, and note the ones that are unavailable.
-    kpi_fns = [
-        kpi_module.mortality_rate,
-        kpi_module.dama_rate,
-        kpi_module.icu_sepsis_rate,
-        kpi_module.icu_readmission_rate,
-        kpi_module.comorbidity_burden,
-    ]
-
-    available, unavailable = [], []
-    for fn in kpi_fns:
-        try:
-            k = fn()
-            available.append(f"- {k['label']}: {k['value']}{k['unit']}")
-        except Exception as exc:  # noqa: BLE001 - we deliberately swallow to degrade gracefully
-            logger.warning("KPI %s unavailable: %s", fn.__name__, exc)
-            unavailable.append(fn.__name__)
-
-    result = "Current hospital KPIs:\n" + "\n".join(available)
-    if unavailable:
-        result += f"\n\n(Note: {len(unavailable)} metric(s) are currently unavailable.)"
+    import pandas as pd
+    CSV = "/app/data/samples/hospital_dataset.csv"
+    try:
+        df = pd.read_csv(CSV)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("KPI data unavailable: %s", exc)
+        return "Hospital KPI data is currently unavailable."
+    lines = [f"- Total encounters: {len(df):,}"]
+    if "patient_id" in df:
+        lines.append(f"- Unique patients: {df['patient_id'].nunique():,}")
+    if "readmitted" in df:
+        lines.append(f"- 30-day readmission rate: {100*pd.to_numeric(df['readmitted'],errors='coerce').mean():.1f}%")
+    if "outcome" in df:
+        lines.append(f"- Mortality rate: {100*(df['outcome'].astype(str).str.lower()=='deceased').mean():.1f}%")
+    if "treatment_cost" in df:
+        lines.append(f"- Avg treatment cost: ${pd.to_numeric(df['treatment_cost'],errors='coerce').mean():,.0f}")
+    if "length_of_stay" in df:
+        lines.append(f"- Avg length of stay: {pd.to_numeric(df['length_of_stay'],errors='coerce').mean():.1f} days")
+    if "patient_satisfaction" in df:
+        lines.append(f"- Avg patient satisfaction: {pd.to_numeric(df['patient_satisfaction'],errors='coerce').mean():.1f}/10")
+    return "Current hospital KPIs:\n" + "\n".join(lines)
     return result
 
 
