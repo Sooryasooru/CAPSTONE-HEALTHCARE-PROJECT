@@ -55,7 +55,7 @@ RISK_COLOURS = {
 }
 
 app = Dash(__name__, suppress_callback_exceptions=True)
-app.title = "HAIP — Clinical Analytics & Data Intake"
+app.title = "HAIP — Data Intake & Prediction"
 
 # Allow this dashboard to be embedded in the React app via iframe.
 @app.server.after_request
@@ -1124,11 +1124,8 @@ app.layout = html.Div(className="page", children=[
         ]),
     ]),
 
-    dcc.Tabs(id="main-tabs", value="tab-analytics", className="tab-bar", children=[
-        dcc.Tab(label="Clinical Analytics", value="tab-analytics",
-                className="tab-item", selected_className="tab-item--selected"),
-        dcc.Tab(label="Data Intake & Prediction", value="tab-intake",
-                className="tab-item", selected_className="tab-item--selected"),
+    dcc.Tabs(id="main-tabs", value="tab-intake", style={"display": "none"}, children=[
+        dcc.Tab(label="Data Intake & Prediction", value="tab-intake"),
     ]),
 
     # Filled lazily by the routing callback on tab select.
@@ -1149,9 +1146,7 @@ app.layout = html.Div(className="page", children=[
 )
 def render_tab(tab: str) -> html.Div:
     """Build the selected tab's layout on demand (lazy loading)."""
-    if tab == "tab-intake":
-        return build_intake_layout()
-    return build_analytics_layout()
+    return build_intake_layout()
 
 
 @app.callback(
