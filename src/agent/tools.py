@@ -83,17 +83,20 @@ def forecast_admissions(months_ahead: int = 6) -> str:
     Args:
         months_ahead: Number of future months to project (default 6).
     """
-    from src.prediction.forecast import forecast_admissions as _forecast
-
+    import pandas as pd
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    CSV = "/app/data/samples/hospital_dataset.csv"
     try:
-        df = _forecast(months_ahead=months_ahead)
-    except ValueError as exc:
+        df = pd.read_csv(CSV)
+        df["admission_date"] = pd.to_datetime(df["admission_date"], errors="coerce")
+        monthly = df.dropna(subset=["admission_date"]).set_index("admission_date").resample("MS").size()
+        if len(monthly) < 4:
+            return "Forecast unavailable: not enough monthly history."
+        model = ExponentialSmoothing(monthly, trend="add", seasonal=None).fit()
+        fc = model.forecast(months_ahead).round().astype(int)
+    except Exception as exc:  # noqa: BLE001
         return f"Forecast unavailable: {exc}"
-
-    lines = [
-        f"- {row['month'].strftime('%b %Y')}: {int(row['forecast'])} admissions"
-        for _, row in df.iterrows()
-    ]
+    lines = [f"- {idx.strftime('%b %Y')}: {int(val)} admissions" for idx, val in fc.items()]
     return f"Forecast for the next {months_ahead} months:\n" + "\n".join(lines)
 
 
