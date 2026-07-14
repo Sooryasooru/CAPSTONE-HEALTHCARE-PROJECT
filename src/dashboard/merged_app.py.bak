@@ -338,145 +338,6 @@ def patient_summary(patient_id: str) -> html.Div:
     ])
 
 
-def build_analytics_layout() -> html.Div:
-    """Build the analytics tab layout (lazy — called on tab select)."""
-    logger.info("Building analytics tab layout")
-    top = _p360().sort_values("total_encounters", ascending=False)
-    patient_options = [
-        {"label": f"{r['patient_id'][:8]}… ({int(r['total_encounters'])} enc)",
-         "value": r["patient_id"]}
-        for _, r in top.head(200).iterrows()
-    ]
-    default_patient = top.iloc[0]["patient_id"]
-    stay_options = [{"label": f"Inpatient stay #{i}", "value": i}
-                    for i in range(0, min(_n_encounters(), 200))]
-
-    return html.Div(children=[
-        html.Div(className="section-label", children="Key indicators"),
-        html.Div(className="kpi-row",
-                 children=[kpi_card(m) for m in _kpis()]),
-
-        html.Div(className="section-label", children="Overview · population"),
-        html.Div(className="chart-row", children=[
-            html.Div(dcc.Graph(figure=fig_outcome_donut()), className="chart-half"),
-            html.Div(dcc.Graph(figure=fig_cost_by_condition()), className="chart-half"),
-        ]),
-
-        html.Div(className="section-label", children="Financial · revenue"),
-        html.Div(className="drill-panel", children=[
-            dcc.Graph(figure=fig_revenue()),
-            html.Div(className="drill-note", children=[
-                "Monthly revenue from all encounters. Total claim cost vs the "
-                "share covered by payers — the gap is patient responsibility.",
-            ]),
-        ]),
-
-        html.Div(className="section-label", children="Forecasting · capacity"),
-        html.Div(className="drill-panel", children=[
-            dcc.Graph(figure=fig_forecast()),
-            html.Div(className="drill-note", children=[
-                "Holt-Winters projection of monthly encounter volume. The "
-                "planning table translates the forecast into operational "
-                "figures (inpatient share 0.8%, avg stay 4.9 days; the nurse "
-                "estimate uses a stated 1:4 ratio a hospital can adjust).",
-            ]),
-            planning_table(),
-        ]),
-
-        html.Div(className="section-label",
-                 children="Patient 360 · connected journey"),
-        html.Div(className="drill-controls", children=[
-            html.Label("Select patient", className="control-label"),
-            dcc.Dropdown(id="patient-select", options=patient_options,
-                         value=default_patient, clearable=False,
-                         className="dropdown"),
-        ]),
-        html.Div(className="drill-panel", children=[
-            dcc.Graph(id="journey-chart"),
-            html.Div(id="patient-summary"),
-        ]),
-
-        html.Div(className="section-label",
-                 children="Patient risk · early-warning panel"),
-        html.Div(className="drill-controls", children=[
-            html.Label("Select inpatient stay", className="control-label"),
-            dcc.Dropdown(id="stay-select", options=stay_options,
-                         value=0, clearable=False, className="dropdown"),
-        ]),
-        html.Div(className="drill-panel", children=[
-            dcc.Graph(id="risk-chart"),
-            html.Div(className="drill-note", children=[
-                "Multi-risk triage aid (not a diagnosis) across four connected "
-                "targets — readmission, mortality, high cost and deterioration. "
-                "Scores use only features known at or before discharge — no "
-                "future data leaks in. Best model per risk by PR-AUC. Weaker "
-                "targets (e.g. mortality) are disclosed, not hidden.",
-            ]),
-        ]),
-
-        html.Div(className="section-label",
-                 children="Model evaluation · confusion matrix"),
-        html.Div(className="drill-controls", children=[
-            html.Label("Select risk target", className="control-label"),
-            dcc.Dropdown(
-                id="cm-select",
-                options=[{"label": t.replace("_", " ").title(), "value": t}
-                         for t in cls_evaluate.TARGETS],
-                value=cls_evaluate.TARGETS[0], clearable=False,
-                className="dropdown"),
-        ]),
-        html.Div(className="drill-panel", children=[
-            dcc.Graph(id="cm-chart"),
-            html.Div(className="drill-note", children=[
-                "Confusion matrix for the best model per target, on a held-out "
-                "test split (same split used in training). It shows where the "
-                "model is wrong: a False Negative (a genuinely at-risk patient "
-                "marked safe) is the costliest error in a clinical setting — far "
-                "worse than a False Positive (a precautionary false alarm). This "
-                "is shown openly so performance can be judged honestly, not just "
-                "by a single headline score.",
-            ]),
-        ]),
-    ])
-
-
-# --- Analytics callbacks ---------------------------------------------------
-@app.callback(
-    Output("journey-chart", "figure"),
-    Output("patient-summary", "children"),
-    Input("patient-select", "value"),
-)
-def update_patient(patient_id: str):
-    """Rebuild the patient journey chart and summary for the selection."""
-    logger.info("Patient 360 for %s", patient_id)
-    return patient_journey_figure(patient_id), patient_summary(patient_id)
-
-
-@app.callback(
-    Output("risk-chart", "figure"),
-    Input("stay-select", "value"),
-)
-def update_risk(index: int) -> go.Figure:
-    """Rebuild the risk panel for the selected inpatient stay."""
-    logger.info("Risk panel for stay #%s", index)
-    return risk_panel_figure(index)
-
-
-@app.callback(
-    Output("cm-chart", "figure"),
-    Input("cm-select", "value"),
-)
-def update_confusion(risk: str) -> go.Figure:
-    """Rebuild the confusion matrix for the selected risk target."""
-    logger.info("Confusion matrix for %s", risk)
-    return confusion_figure(risk)
-
-
-# ===========================================================================
-# DATA INTAKE TAB  (formerly upload_app.py)
-# ===========================================================================
-
-# --- HAIP standard schema: what the pipeline expects ---------------------
 REQUIRED_COLUMNS = {
     "patient_id":     "Unique patient identifier (the join key)",
     "encounter_date": "Admission / visit date",
@@ -492,41 +353,6 @@ RECOMMENDED_COLUMNS = {
 }
 ALL_STANDARD = {**REQUIRED_COLUMNS, **RECOMMENDED_COLUMNS}
 
-
-def _eda_figures(df, mapping):
-    """Build EDA figures: missingness, a distribution, correlation heatmap."""
-    figs = []
-
-    miss = (df.isna().mean() * 100).round(1).sort_values(ascending=False)
-    miss = miss[miss > 0].head(15)
-    if len(miss):
-        f = go.Figure(go.Bar(
-            x=list(miss.values[::-1]), y=list(miss.index)[::-1],
-            orientation="h", marker=dict(color=AMBER),
-            text=[f"{v}%" for v in miss.values[::-1]], textposition="auto"))
-        apply_theme(f, height=max(260, 24 * len(miss) + 80))
-        figs.append(("Missing values by column (%)", f))
-
-    numeric_cols = [c for c in df.columns
-                    if pd.api.types.is_numeric_dtype(df[c])][:12]
-
-    if numeric_cols:
-        col = numeric_cols[0]
-        f = go.Figure(go.Histogram(
-            x=df[col].dropna(), marker=dict(color=TEAL), nbinsx=30))
-        apply_theme(f, height=300)
-        figs.append((f"Distribution · {col}", f))
-
-    if len(numeric_cols) >= 2:
-        corr = df[numeric_cols].corr().round(2)
-        f = go.Figure(go.Heatmap(
-            z=corr.values, x=list(corr.columns), y=list(corr.index),
-            colorscale="RdBu", zmid=0, zmin=-1, zmax=1,
-            text=corr.values, texttemplate="%{text}", textfont=dict(size=10)))
-        apply_theme(f, height=max(320, 26 * len(numeric_cols) + 120))
-        figs.append(("Correlation (numeric columns)", f))
-
-    return figs
 
 
 def _parse_upload(contents: str, filename: str) -> pd.DataFrame:
@@ -591,7 +417,7 @@ def build_intake_layout() -> html.Div:
         html.Div(id="mapping-section"),
         html.Div(id="validation-section"),
         html.Div(id="analysis-section"),
-        html.Div(id="report-section", style={"marginTop": "16px"}, children=[
+        html.Div(id="report-section", style={"marginTop": "16px", "display": "none"}, children=[
             html.Button("Download PDF report", id="dl-report-btn", n_clicks=0,
                         style={"padding": "10px 24px", "background": AMBER,
                                "color": "white", "border": "none",
@@ -815,6 +641,43 @@ def _default_features(cols):
     return feats
 
 
+def _eda_figures(df, mapping):
+    """Build EDA figures: missingness, a distribution, correlation heatmap."""
+    figs = []
+
+    miss = (df.isna().mean() * 100).round(1).sort_values(ascending=False)
+    miss = miss[miss > 0].head(15)
+    if len(miss):
+        f = go.Figure(go.Bar(
+            x=list(miss.values[::-1]), y=list(miss.index)[::-1],
+            orientation="h", marker=dict(color=AMBER),
+            text=[f"{v}%" for v in miss.values[::-1]], textposition="auto"))
+        apply_theme(f, height=max(260, 24 * len(miss) + 80))
+        figs.append(("Missing values by column (%)", f))
+
+    numeric_cols = [c for c in df.columns
+                    if pd.api.types.is_numeric_dtype(df[c])][:12]
+
+    if numeric_cols:
+        col = numeric_cols[0]
+        f = go.Figure(go.Histogram(
+            x=df[col].dropna(), marker=dict(color=TEAL), nbinsx=30))
+        apply_theme(f, height=300)
+        figs.append((f"Distribution · {col}", f))
+
+    if len(numeric_cols) >= 2:
+        corr = df[numeric_cols].corr().round(2)
+        f = go.Figure(go.Heatmap(
+            z=corr.values, x=list(corr.columns), y=list(corr.index),
+            colorscale="RdBu", zmid=0, zmin=-1, zmax=1,
+            text=corr.values, texttemplate="%{text}", textfont=dict(size=10)))
+        apply_theme(f, height=max(320, 26 * len(numeric_cols) + 120))
+        figs.append(("Correlation (numeric columns)", f))
+
+    return figs
+
+
+
 def _analysis_and_prediction_ui(df):
     """Build the EDA charts + the target/feature pickers + train button."""
     cols = list(df.columns)
@@ -912,6 +775,7 @@ def _forecast_from_upload(df, periods=6):
 
 @app.callback(
     Output("up-results", "children"),
+    Output("report-section", "style"),
     Input("up-train-btn", "n_clicks"),
     State("data-store", "data"),
     State("up-target", "value"),
@@ -922,18 +786,18 @@ def train_uploaded(n_clicks, data_json, target, features):
     """Train the AutoML engine on the uploaded data and show results."""
     from dashboard.pipeline import train_on_upload
     if not n_clicks or data_json is None:
-        return None
+        return None, {"marginTop": "16px", "display": "none"}
     if not target:
-        return html.Div("Pick a target column.", className="drill-note")
+        return html.Div("Pick a target column.", className="drill-note"), {"marginTop": "16px", "display": "none"}
     if not features:
         return html.Div("Pick at least one feature column.",
-                        className="drill-note")
+                        className="drill-note"), {"marginTop": "16px", "display": "none"}
 
     df = pd.read_json(io.StringIO(data_json), orient="split")
     result = train_on_upload(df, target, features)
     if result.error:
         return html.Div(f"Could not train: {result.error}",
-                        className="drill-note", style={"color": RED})
+                        className="drill-note", style={"color": RED}), {"marginTop": "16px", "display": "none"}
 
     cards = html.Div(className="kpi-row", children=[
         html.Div(className="kpi-card", style={"borderLeft": f"5px solid {TEAL}"},
@@ -990,7 +854,7 @@ def train_uploaded(n_clicks, data_json, target, features):
             "not diagnostic outputs. Use the forecast for capacity planning.",
             className="drill-note"),
     ]))
-    return html.Div(children)
+    return html.Div(children), {"marginTop": "16px", "display": "block"}
 
 
 # ---------------------------------------------------------------------------

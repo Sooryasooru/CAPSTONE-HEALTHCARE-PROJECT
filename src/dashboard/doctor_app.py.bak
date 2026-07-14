@@ -30,17 +30,17 @@ from dash import Dash, Input, Output, State, dcc, html, dash_table, ALL, ctx
 logger = logging.getLogger(__name__)
 
 # --- palette (inline, self-contained) --------------------------------------
-INK = "#EAEEE6"
-TEAL = "#4ADE80"
-TEAL_DK = "#22C55E"
+INK = "#0B1F33"
+TEAL = "#1A7A8C"
+TEAL_DK = "#0F5563"
 AMBER = "#E8A33D"
 RED = "#C2453D"
-GREEN = "#22C55E"
-MUTED = "#8A938A"
-GRID = "#2B2F28"
-BG = "#12140F"
-CARD = "#181B15"
-FADE = "#3A3F36"
+GREEN = "#3C7A5A"
+MUTED = "#6B7A88"
+GRID = "#EDF1F4"
+BG = "#F4F7F9"
+CARD = "#FFFFFF"
+FADE = "#C7D2DA"
 
 MIN_VOLUME = 30
 DOCTOR_COL = "doctor_name"
@@ -55,16 +55,6 @@ OUTCOMES = {
 # Kept simple: a coloured dot label, no external icon dependency.
 
 app = Dash(__name__, suppress_callback_exceptions=True)
-app.title = "HAIP — Provider Performance"
-app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}
-<style>
-  html,body{margin:0;background:#12140F;color:#EAEEE6;}
-  #react-entry-point,._dash-loading{background:#12140F;}
-  .page,[class*="page"]{background:#12140F!important;color:#EAEEE6;min-height:100vh;}
-  .dash-table-container .dash-spreadsheet td{background:#181B15!important;color:#EAEEE6!important;}
-  input,textarea,select{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;}
-</style></head><body>{%app_entry%}<footer>{%config%}{%scripts%}{%renderer%}</footer></body></html>'''
-
 
 # allow this dashboard to be embedded in an iframe (React app)
 @app.server.after_request
@@ -507,7 +497,7 @@ def _oe_badge(oe):
     good = oe <= 1.0
     return html.Span(f"O/E {oe:.2f}", style={
         "fontSize": "11px",
-        "background": "#14301F" if good else "#301414",
+        "background": "#E6F4EE" if good else "#FBEAEA",
         "color": GREEN if good else RED,
         "padding": "3px 9px", "borderRadius": "10px", "fontWeight": "500"})
 
@@ -535,7 +525,7 @@ app.layout = html.Div(style={
             dcc.Upload(id="doc-upload", multiple=False, children=html.Div(
                 style={"border": f"2px dashed {TEAL}", "borderRadius": "14px",
                        "padding": "40px 20px", "textAlign": "center",
-                       "background": "#181B15", "cursor": "pointer"},
+                       "background": "#EAF3F5", "cursor": "pointer"},
                 children=[
                     html.Div("\u2601", style={"fontSize": "34px",
                                               "color": TEAL}),
@@ -631,7 +621,7 @@ def build_grid(n_clicks, data_json):
     ])
 
     disclosure = html.Div(style={
-        "background": "#2A2410", "border": f"1px solid {AMBER}",
+        "background": "#FEF7EC", "border": f"1px solid {AMBER}",
         "borderLeft": f"4px solid {AMBER}", "borderRadius": "10px",
         "padding": "12px 16px", "marginBottom": "16px",
         "fontSize": "13px", "color": INK}, children=[
@@ -730,7 +720,7 @@ def open_dept(clicks, scored_json):
 
     # Legend — plain-language explanation, collapsible via <details>.
     legend = html.Details(style={
-        "background": "#181B15", "border": f"1px solid {GRID}",
+        "background": "#F7FAFB", "border": f"1px solid {GRID}",
         "borderRadius": "10px", "padding": "10px 14px",
         "marginBottom": "16px", "fontSize": "13px", "color": INK}, children=[
         html.Summary("What do these mean?", style={
@@ -825,7 +815,7 @@ def open_dept(clicks, scored_json):
         style_header={"backgroundColor": TEAL_DK, "color": "#E1F5EE",
                       "fontWeight": "600"},
         style_data_conditional=[
-            {"if": {"row_index": "odd"}, "backgroundColor": "#181B15"}])
+            {"if": {"row_index": "odd"}, "backgroundColor": "#F7FAFB"}])
 
     detail = html.Div([
         html.Div(id="doc-back-btn", n_clicks=0, style={
@@ -970,7 +960,7 @@ def open_doctor(clicks, scored_json, dept):
                             "gap": "14px", "marginBottom": "18px"}, children=[
                 html.Div(initials, style={
                     "width": "52px", "height": "52px", "borderRadius": "50%",
-                    "background": "#181B15", "color": TEAL,
+                    "background": "#EAF3F5", "color": TEAL,
                     "display": "flex", "alignItems": "center",
                     "justifyContent": "center", "fontSize": "20px",
                     "fontWeight": "600"}),

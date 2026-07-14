@@ -56,6 +56,15 @@ RISK_COLOURS = {
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 app.title = "HAIP — Data Intake & Prediction"
+app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}
+<style>
+  html,body{margin:0;background:#12140F;color:#EAEEE6;}
+  .page{background:#12140F!important;color:#EAEEE6;min-height:100vh;}
+  ._dash-loading{color:#4ADE80;}
+  .dash-table-container .dash-spreadsheet td{background:#181B15!important;color:#EAEEE6!important;}
+  input,textarea{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;} .dash-uploader,#upload-data>div,#upload-data{background:#12140F!important;color:#EAEEE6!important;} #upload-status,#upload-status>*{background:transparent!important;}
+</style></head><body>{%app_entry%}<footer>{%config%}{%scripts%}{%renderer%}</footer></body></html>'''
+
 
 # Allow this dashboard to be embedded in the React app via iframe.
 @app.server.after_request
@@ -300,7 +309,7 @@ def confusion_figure(risk: str) -> go.Figure:
         z=z, x=["Predicted: No", "Predicted: Yes"],
         y=["Actual: No risk", "Actual: At risk"],
         text=labels_text, texttemplate="%{text}", textfont=dict(size=13),
-        colorscale=[[0, "#EAF1F3"], [1, TEAL]], showscale=False,
+        colorscale=[[0, "#12140F"], [1, TEAL]], showscale=False,
         hovertemplate="%{y} / %{x}: %{z}<extra></extra>"))
     apply_theme(fig, title=f"Confusion matrix — {risk} (best: {row['model']})",
                 height=360)
@@ -408,7 +417,7 @@ def build_intake_layout() -> html.Div:
             style={
                 "width": "100%", "height": "120px", "borderWidth": "2px",
                 "borderStyle": "dashed", "borderColor": TEAL, "borderRadius": "12px",
-                "textAlign": "center", "padding": "30px 0", "background": "#F7FAFB",
+                "textAlign": "center", "padding": "30px 0", "background": "#12140F",
             },
             multiple=False,
         ),
@@ -490,7 +499,7 @@ def handle_upload(contents, filename):
         style_table={"overflowX": "auto"},
         style_cell={"fontSize": "12px", "padding": "6px",
                     "fontFamily": "inherit", "textAlign": "left"},
-        style_header={"backgroundColor": "#F1F5F6", "fontWeight": "600"},
+        style_header={"backgroundColor": "#181B15", "color": "#EAEEE6", "fontWeight": "600"},
     )
 
     mapping = html.Div([
@@ -590,10 +599,10 @@ def validate(n_clicks, data_json, map_values, map_ids):
             style_table={"overflowX": "auto"},
             style_cell={"fontSize": "13px", "padding": "8px",
                         "fontFamily": "inherit", "textAlign": "left"},
-            style_header={"backgroundColor": "#F1F5F6", "fontWeight": "600"},
+            style_header={"backgroundColor": "#181B15", "color": "#EAEEE6", "fontWeight": "600"},
             style_data_conditional=[{
                 "if": {"filter_query": "{Status} contains 'missing'"},
-                "backgroundColor": "#FDF3E7"}],
+                "backgroundColor": "#2A2410"}],
         ))
 
     if missing_required:

@@ -14,14 +14,14 @@ Run from src/ with:  python -m dashboard.theme   (sanity check, prints tokens)
 import plotly.graph_objects as go
 
 # --- Clinical palette (single source of truth for figures) ----------------
-INK = "#EAEEE6"        # primary text
-TEAL = "#4ADE80"       # primary accent
+INK = "#0B1F33"        # primary text
+TEAL = "#1A7A8C"       # primary accent
 AMBER = "#E8A33D"      # secondary / forecast / warning
 RED = "#C2453D"        # reserved: mortality / deceased / adverse
-GREEN = "#22C55E"      # positive / alive
-MUTED = "#8A938A"      # secondary text, labels
-GRID = "#2B2F28"       # subtle grid lines
-PAPER = "#181B15"      # chart background
+GREEN = "#3C7A5A"      # positive / alive
+MUTED = "#6B7A88"      # secondary text, labels
+GRID = "#EDF1F4"       # subtle grid lines
+PAPER = "#FFFFFF"      # chart background
 
 # Ordered sequence for categorical series (teal-led, red kept out of the
 # rotation so it stays meaningful for adverse outcomes only).
@@ -45,7 +45,7 @@ def apply_theme(fig: go.Figure, *, title: str | None = None,
         margin=dict(t=60, b=44, l=24, r=24),
         colorway=SEQUENCE,
         hoverlabel=dict(
-            bgcolor="#12140F", bordercolor=GRID,
+            bgcolor="white", bordercolor=GRID,
             font=dict(family=FONT_FAMILY, color=INK, size=12)),
         title=dict(x=0.02, y=0.97, font=dict(size=16, color=INK)),
         legend=dict(orientation="h", y=1.04, x=0.5, xanchor="center",
