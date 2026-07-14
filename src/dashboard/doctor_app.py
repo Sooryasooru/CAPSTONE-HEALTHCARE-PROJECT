@@ -467,7 +467,7 @@ def _fig_doctor_vs_dept(doc_oe, dept_oe, outcome):
 # STYLE HELPERS (inline)
 # ===========================================================================
 def _page(*children):
-    return html.Div(style={"maxWidth": "1100px", "margin": "0 auto",
+    return html.Div(style={"maxWidth": "1320px", "margin": "0 auto",
                            "padding": "0 20px"}, children=list(children))
 
 

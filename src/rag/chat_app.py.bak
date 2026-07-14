@@ -29,12 +29,6 @@ from src.rag.retriever import Retriever
 from src.rag.doc_uploader import ingest_pdf, list_hospitals, HOSPITALS_ROOT
 
 st.set_page_config(page_title="HAIP Guideline Assistant", page_icon="🩺", layout="centered")
-st.markdown("""<style>
-  #MainMenu,header[data-testid="stHeader"],.stDeployButton,[data-testid="stToolbar"]{display:none!important;}
-  .stApp{background:#12140F;}
-  .block-container{padding-top:1.5rem!important;}
-  section[data-testid="stSidebar"]{background:#181B15;border-right:1px solid #2B2F28;}
-</style>""", unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------- #

@@ -1033,3 +1033,90 @@ body {
   cursor: pointer;
   font-size: 13px;
 }
+
+/* ---- Card 4 · Ask HAIP native chat (charcoal/emerald) ---- */
+.haip-main.askhaip {
+  max-width: 860px; margin: 0 auto; padding: 28px 24px 40px;
+  display: flex; flex-direction: column; min-height: calc(100vh - 132px);
+}
+.askhaip-bar { margin-bottom: 6px; }
+.askhaip-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--muted); font-weight: 500;
+}
+.askhaip-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teal); display: inline-block;
+}
+.askhaip-thread {
+  flex: 1; display: flex; flex-direction: column; gap: 16px;
+  padding: 20px 0;
+}
+.askhaip-empty {
+  color: var(--muted); font-size: 15px; text-align: center;
+  padding: 40px 0; line-height: 1.7;
+}
+.askhaip-suggestions {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  margin-top: 20px;
+}
+.askhaip-chip {
+  background: var(--slate-2); border: 1px solid var(--line);
+  color: var(--ink); padding: 8px 14px; border-radius: 999px;
+  font-size: 13px; cursor: pointer; transition: border-color .15s, color .15s;
+}
+.askhaip-chip:hover { border-color: var(--teal); color: var(--teal); }
+.askhaip-msg { display: flex; }
+.askhaip-msg.agent { justify-content: flex-start; }
+.askhaip-msg:not(.agent) { justify-content: flex-end; }
+.askhaip-bubble {
+  max-width: 78%; padding: 14px 18px; border-radius: 14px;
+  font-size: 15px; line-height: 1.65; white-space: pre-wrap;
+}
+.askhaip-msg.agent .askhaip-bubble {
+  background: var(--slate-2); border: 1px solid var(--line);
+  color: var(--ink); border-top-left-radius: 4px;
+}
+.askhaip-msg:not(.agent) .askhaip-bubble {
+  background: var(--teal-dim); color: #06231f;
+  border-top-right-radius: 4px;
+}
+.askhaip-thinking { color: var(--muted); font-style: italic; }
+.askhaip-tools {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.askhaip-tool {
+  font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.askhaip-tool-tick { color: var(--teal); font-weight: 700; }
+.askhaip-error {
+  color: #f2b8b5; background: rgba(229,97,91,0.12);
+  border: 1px solid var(--red); border-radius: 10px;
+  padding: 12px 16px; font-size: 14px;
+}
+.askhaip-composer {
+  display: flex; gap: 10px; align-items: center;
+  padding: 14px 0 8px; position: sticky; bottom: 0;
+  background: var(--slate);
+}
+.askhaip-input {
+  flex: 1; background: var(--slate-2); border: 1px solid var(--line);
+  color: var(--ink); border-radius: 12px; padding: 13px 16px;
+  font-size: 15px; outline: none; transition: border-color .15s;
+}
+.askhaip-input:focus { border-color: var(--teal); }
+.askhaip-input::placeholder { color: var(--muted); }
+.askhaip-send {
+  background: var(--teal); color: #06231f; border: none;
+  border-radius: 12px; padding: 13px 22px; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: background .15s;
+}
+.askhaip-send:hover:not(:disabled) { background: var(--teal-dim); }
+.askhaip-send:disabled { opacity: .5; cursor: not-allowed; }
+.askhaip-disclaimer {
+  color: var(--muted); font-size: 12px; text-align: center;
+  padding-top: 10px;
+}

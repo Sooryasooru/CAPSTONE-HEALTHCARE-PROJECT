@@ -59,10 +59,10 @@ app.title = "HAIP — Data Intake & Prediction"
 app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}
 <style>
   html,body{margin:0;background:#12140F;color:#EAEEE6;}
-  .page{background:#12140F!important;color:#EAEEE6;min-height:100vh;}
+  .page{background:#12140F!important;color:#EAEEE6;min-height:100vh;max-width:1320px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;} #tab-content{flex:1;} .header,.logo{padding-left:0!important;margin-left:0!important;} .page>*{max-width:100%;} #upload-data{min-height:220px!important;display:flex!important;align-items:center;justify-content:center;}
   ._dash-loading{color:#4ADE80;}
   .dash-table-container .dash-spreadsheet td{background:#181B15!important;color:#EAEEE6!important;}
-  input,textarea{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;} .dash-uploader,#upload-data>div,#upload-data{background:#12140F!important;color:#EAEEE6!important;} #upload-status,#upload-status>*{background:transparent!important;}
+  input,textarea{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;} .dash-uploader,#upload-data>div,#upload-data{background:#12140F!important;color:#EAEEE6!important;} #upload-status,#upload-status>*{background:transparent!important;} #upload-data:focus,#upload-data *:focus{outline:none!important;} #mapping-section:empty,#validation-section:empty,#analysis-section:empty,#prediction-section:empty{display:none!important;border:none!important;} .drill-note:empty{display:none!important;}
 </style></head><body>{%app_entry%}<footer>{%config%}{%scripts%}{%renderer%}</footer></body></html>'''
 
 
