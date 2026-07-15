@@ -59,7 +59,7 @@ app.title = "HAIP — Data Intake & Prediction"
 app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}
 <style>
   html,body{margin:0;background:#12140F;color:#EAEEE6;}
-  .page{background:#12140F!important;color:#EAEEE6;} #upload-data{min-height:220px!important;display:flex!important;align-items:center;justify-content:center;}
+  .page{background:#12140F!important;color:#EAEEE6;} #upload-data{display:flex!important;align-items:center;justify-content:center;}
   ._dash-loading{color:#4ADE80;}
   .dash-table-container .dash-spreadsheet td{background:#181B15!important;color:#EAEEE6!important;}
   input,textarea{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;} .dash-uploader,#upload-data>div,#upload-data{background:#12140F!important;color:#EAEEE6!important;} #upload-status,#upload-status>*{background:transparent!important;} #upload-data:focus,#upload-data *:focus{outline:none!important;} #mapping-section:empty,#validation-section:empty,#analysis-section:empty,#prediction-section:empty{display:none!important;border:none!important;} .drill-note:empty{display:none!important;}
@@ -408,16 +408,23 @@ def build_intake_layout() -> html.Div:
         dcc.Upload(
             id="upload-data",
             children=html.Div([
-                "Drag and drop a file here, or ",
-                html.A("browse", style={"color": TEAL, "textDecoration": "underline"}),
-                html.Br(),
+                html.Div("↑", style={"fontSize": "26px", "color": TEAL,
+                                          "lineHeight": "1", "marginBottom": "10px"}),
+                html.Div([
+                    "Drag and drop a file here, or ",
+                    html.A("browse", style={"color": TEAL, "fontWeight": "600",
+                                            "textDecoration": "none"}),
+                ], style={"color": INK, "fontSize": "15px", "fontWeight": "500"}),
                 html.Span("CSV, JSON, or Excel",
-                          style={"color": MUTED, "fontSize": "13px"}),
+                          style={"color": MUTED, "fontSize": "13px",
+                                 "marginTop": "6px", "display": "block"}),
             ]),
             style={
-                "width": "100%", "height": "120px", "borderWidth": "2px",
-                "borderStyle": "dashed", "borderColor": TEAL, "borderRadius": "12px",
-                "textAlign": "center", "padding": "30px 0", "background": "#12140F",
+                "width": "100%", "borderWidth": "1px",
+                "borderStyle": "dashed", "borderColor": "#2B2F28",
+                "borderRadius": "14px", "textAlign": "center",
+                "padding": "36px 0", "background": "#181B15",
+                "cursor": "pointer",
             },
             multiple=False,
         ),
@@ -1053,13 +1060,14 @@ def build_uploaded_dashboard(n_clicks, data_json, mapping):
 # SHELL + TAB ROUTING
 # ===========================================================================
 app.layout = html.Div(className="page", children=[
-    html.Div(className="header", children=[
-        html.Div("HAIP", className="logo"),
-        html.Div([
-            html.H1("Healthcare AI Platform", className="title"),
-            html.P("Connected Synthea analytics + hospital data intake — "
-                   "one platform", className="subtitle"),
+    html.Div(className="page-head", children=[
+        html.Div(className="page-eyebrow", children=[
+            html.Span(className="page-dot"),
+            "Hospital data · analytics",
         ]),
+        html.H1("Upload, analyze, and forecast admissions", className="title"),
+        html.P("Map your columns, explore KPIs, then train a model and "
+               "forecast the months ahead.", className="subtitle"),
     ]),
 
     dcc.Tabs(id="main-tabs", value="tab-intake", style={"display": "none"}, children=[
@@ -1071,10 +1079,7 @@ app.layout = html.Div(className="page", children=[
                 type="default"),
 
     html.Div(className="footer",
-             children="HAIP · unified platform · connected analytics + "
-                      "prediction from PostgreSQL (Synthea), plus hospital "
-                      "data intake. Proof-of-concept on synthetic data — "
-                      "triage aid, not diagnosis."),
+             children="HAIP · unified analytics and prediction platform."),
 ])
 
 

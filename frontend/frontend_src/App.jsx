@@ -46,12 +46,6 @@ export default function App() {
       {screen === "knowledge" && <Knowledge nav={nav} back="select" />}
       {screen === "askhaip" && <AskHaip nav={nav} back="select" />}
 
-      {!isAuth && (
-        <footer className="haip-footer">
-          Outputs are triage aids on synthetic data, not diagnostic decisions.
-          Every automated route is shown for human review.
-        </footer>
-      )}
     </div>
   );
 }

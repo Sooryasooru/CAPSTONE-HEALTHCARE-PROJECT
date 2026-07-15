@@ -27,7 +27,7 @@ body {
   line-height: 1.5;
 }
 
-.page { max-width: 100%; margin: 0; padding: 32px 40px 80px; min-height: 100vh; display: flex; flex-direction: column; }
+.page { max-width: 1140px; margin: 0 auto; width: 100%; padding: 40px 32px 80px; min-height: 100vh; display: flex; flex-direction: column; }
 
 /* --- Header --- */
 .header {
@@ -133,4 +133,23 @@ body {
   .page { padding: 24px 18px 60px; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .title { font-size: 23px; }
+}
+
+/* --- Card-4-aligned page header (badge removed) --- */
+.page-head { margin-bottom: 24px; }
+.page-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--muted); font-weight: 500;
+  margin-bottom: 14px;
+}
+.page-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teal); display: inline-block;
+}
+.page-head .title {
+  margin: 0; font-size: 30px; font-weight: 700;
+  letter-spacing: -0.02em; color: #ffffff;
+}
+.page-head .subtitle {
+  margin: 8px 0 0; color: #b8c2b6; font-size: 15px; line-height: 1.6;
 }
