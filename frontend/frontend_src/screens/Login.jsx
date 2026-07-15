@@ -38,13 +38,13 @@ export default function Login({ nav, onLogin }) {
           <div className="brand-mark">HAIP</div>
           <h1 className="brand-title">Welcome back.</h1>
           <p className="brand-copy">
-            Sign in to reach your hospital's analytics, forecasting, and
-            guideline knowledge base. Add more clinical documents any time.
+            Pick up where you left off. Your dashboards, forecasts, and
+            clinical knowledge base are ready the moment you sign in.
           </p>
           <ul className="brand-points">
-            <li>Every automated decision shown for human review</li>
-            <li>Your guidelines stay isolated to your hospital</li>
-            <li>Proof of concept on synthetic data</li>
+            <li>Live admissions and forecast dashboards</li>
+            <li>Instant answers from your guideline base</li>
+            <li>Secure, hospital-isolated workspace</li>
           </ul>
         </div>
       </aside>

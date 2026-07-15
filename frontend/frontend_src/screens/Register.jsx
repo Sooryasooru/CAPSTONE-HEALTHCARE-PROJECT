@@ -45,14 +45,13 @@ export default function Register({ nav }) {
           <div className="brand-mark">HAIP</div>
           <h1 className="brand-title">Clinical intelligence, unified.</h1>
           <p className="brand-copy">
-            Analytics, forecasting, and guideline search behind one secure door.
-            Register your hospital to build an isolated knowledge base from your
-            own clinical documents.
+            Set up your hospital in minutes. Upload your first guideline and
+            HAIP builds a private analytics and knowledge platform around it.
           </p>
           <ul className="brand-points">
+            <li>Analytics, forecasting, and guideline search in one place</li>
+            <li>Your first document builds an isolated knowledge base</li>
             <li>Every automated decision shown for human review</li>
-            <li>Your guidelines stay isolated to your hospital</li>
-            <li>Proof of concept on synthetic data</li>
           </ul>
         </div>
       </aside>

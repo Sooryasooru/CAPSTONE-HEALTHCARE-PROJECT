@@ -39,11 +39,11 @@ const CARDS = [
 export default function Select({ nav }) {
   return (
     <main className="haip-main select-c">
-      <aside className="select-c-rail">
+      <header className="select-c-head">
         <div className="select-c-mark">HAIP</div>
         <h2>Choose a section</h2>
         <p>Everything for your hospital, behind one door.</p>
-      </aside>
+      </header>
 
       <div className="select-c-list">
         {CARDS.map((c) => (

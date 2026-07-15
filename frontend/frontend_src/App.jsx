@@ -65,7 +65,7 @@ function Header({ session, onLogout }) {
       </div>
       <div className="tagline">
         Healthcare Analytics &amp; Intelligence Platform
-        <span className="poc">proof of concept · synthetic data</span>
+        <span className="poc">secure · hospital-isolated workspace</span>
       </div>
       {session && (
         <button className="header-logout" onClick={onLogout}>
