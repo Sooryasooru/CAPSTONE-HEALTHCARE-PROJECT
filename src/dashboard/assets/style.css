@@ -12,7 +12,7 @@
   --muted: #6B7A88;
   --line: #E3E9ED;
   --bg: #F4F7F9;
-  --card: #FFFFFF;
+  --card: #181B15;
   --shadow: 0 1px 2px rgba(11,31,51,0.04), 0 4px 16px rgba(11,31,51,0.05);
 }
 
@@ -152,4 +152,128 @@ body {
 }
 .page-head .subtitle {
   margin: 8px 0 0; color: #b8c2b6; font-size: 15px; line-height: 1.6;
+}
+
+
+/* --- Dark dcc.Dropdown (react-select) --- */
+.Select__control,
+.Select-control {
+  background: #181B15 !important;
+  border-color: #2B2F28 !important;
+  color: #EAEEE6 !important;
+}
+.Select__control--is-focused,
+.Select.is-focused > .Select-control {
+  border-color: #4ADE80 !important;
+  box-shadow: none !important;
+}
+.Select__menu,
+.Select-menu-outer {
+  background: #181B15 !important;
+  border: 1px solid #2B2F28 !important;
+}
+.Select__single-value,
+.Select__input,
+.Select__input-container,
+.Select-value-label,
+.Select-input > input {
+  color: #EAEEE6 !important;
+}
+.Select__placeholder,
+.Select-placeholder {
+  color: #8A927E !important;
+}
+.Select__option,
+.Select-option {
+  background: #181B15 !important;
+  color: #EAEEE6 !important;
+}
+.Select__option--is-focused,
+.Select-option.is-focused,
+.VirtualizedSelectFocusedOption {
+  background: #2B2F28 !important;
+}
+.Select__option--is-selected,
+.Select-option.is-selected {
+  background: #22C55E !important;
+  color: #12140F !important;
+}
+.Select__multi-value,
+.Select--multi .Select-value {
+  background: #12140F !important;
+  border: 1px solid #2B2F28 !important;
+}
+.Select__multi-value__label,
+.Select--multi .Select-value-label {
+  color: #EAEEE6 !important;
+}
+.Select__indicator-separator { background: #2B2F28 !important; }
+.Select__dropdown-indicator,
+.Select-arrow-zone { color: #8A927E !important; }
+
+
+/* --- Dark dropdowns via structural selectors (class-name agnostic) --- */
+.dropdown > div,
+#up-target > div,
+#up-features > div,
+#flt-col > div,
+#flt-val > div,
+#flt-dist > div {
+  background-color: #181B15 !important;
+  border-color: #2B2F28 !important;
+  color: #EAEEE6 !important;
+}
+.dropdown > div > div,
+#up-target > div > div,
+#up-features > div > div,
+#flt-col > div > div,
+#flt-val > div > div,
+#flt-dist > div > div {
+  background-color: #181B15 !important;
+  color: #EAEEE6 !important;
+}
+/* the open menu is portaled but still inside the component tree */
+.dropdown div[class*="menu"],
+.dropdown div[id*="listbox"] {
+  background-color: #181B15 !important;
+  color: #EAEEE6 !important;
+}
+.dropdown div[class*="option"]:hover {
+  background-color: #2B2F28 !important;
+}
+
+
+/* --- Dark dropdowns: REAL classes for this Dash version --- */
+.dash-dropdown {
+  background: #181B15 !important;
+  border: 1px solid #2B2F28 !important;
+  color: #EAEEE6 !important;
+  border-radius: 8px !important;
+}
+.dash-dropdown-value,
+.dash-dropdown-value-item,
+.dash-dropdown-content {
+  background: #181B15 !important;
+  color: #EAEEE6 !important;
+}
+.dash-dropdown-icon { color: #8A927E !important; }
+/* menu is portaled to body via radix popper */
+[data-radix-popper-wrapper] {
+  background: #181B15 !important;
+  border: 1px solid #2B2F28 !important;
+  border-radius: 8px !important;
+  color: #EAEEE6 !important;
+}
+[data-radix-popper-wrapper] input {
+  background: #12140F !important;
+  color: #EAEEE6 !important;
+  border: 1px solid #2B2F28 !important;
+}
+[data-radix-popper-wrapper] [role="option"] {
+  background: #181B15 !important;
+  color: #EAEEE6 !important;
+}
+[data-radix-popper-wrapper] [role="option"]:hover,
+[data-radix-popper-wrapper] [role="option"][data-highlighted] {
+  background: #2B2F28 !important;
 }

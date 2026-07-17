@@ -467,25 +467,27 @@ def _fig_doctor_vs_dept(doc_oe, dept_oe, outcome):
 # STYLE HELPERS (inline)
 # ===========================================================================
 def _page(*children):
-    return html.Div(style={"maxWidth": "100%", "margin": "0",
-                           "padding": "0 20px"}, children=list(children))
+    return html.Div(style={"maxWidth": "1140px", "margin": "0 auto",
+                           "width": "100%",
+                           "padding": "40px 32px 80px"}, children=list(children))
 
 
 def _header():
-    return html.Div(style={
-        "display": "flex", "alignItems": "center", "gap": "14px",
-        "padding": "20px 0 16px", "borderBottom": f"1px solid {GRID}",
-        "marginBottom": "24px"}, children=[
-        html.Div("HAIP", style={
-            "background": TEAL, "color": "white", "fontWeight": "700",
-            "fontSize": "18px", "padding": "8px 14px", "borderRadius": "10px",
-            "letterSpacing": "0.05em"}),
-        html.Div([
-            html.Div("Provider Performance", style={
-                "fontSize": "20px", "fontWeight": "600", "color": INK}),
-            html.Div("Risk-adjusted, honest, scales to any hospital",
-                     style={"fontSize": "13px", "color": MUTED}),
+    return html.Div(style={"marginBottom": "24px"}, children=[
+        html.Div(style={"display": "flex", "alignItems": "center",
+                        "gap": "8px", "fontSize": "14px", "color": MUTED,
+                        "fontWeight": "500", "marginBottom": "14px"}, children=[
+            html.Span(style={"width": "8px", "height": "8px",
+                             "borderRadius": "50%", "background": TEAL,
+                             "display": "inline-block"}),
+            "Doctors · provider performance",
         ]),
+        html.Div("Provider Performance", style={
+            "fontSize": "30px", "fontWeight": "700", "color": "#ffffff",
+            "letterSpacing": "-0.02em"}),
+        html.Div("Risk-adjusted, honest, scales to any hospital",
+                 style={"fontSize": "15px", "color": "#b8c2b6",
+                        "marginTop": "8px"}),
     ])
 
 
@@ -533,14 +535,14 @@ app.layout = html.Div(style={
                                 "marginTop": "2px"}),
             ]),
             dcc.Upload(id="doc-upload", multiple=False, children=html.Div(
-                style={"border": f"2px dashed {TEAL}", "borderRadius": "14px",
-                       "padding": "40px 20px", "textAlign": "center",
+                style={"border": f"1px dashed {GRID}", "borderRadius": "14px",
+                       "padding": "36px 20px", "textAlign": "center",
                        "background": "#181B15", "cursor": "pointer"},
                 children=[
-                    html.Div("\u2601", style={"fontSize": "34px",
-                                              "color": TEAL}),
-                    html.Div("Drop file here or click to browse", style={
-                        "fontSize": "15px", "color": TEAL_DK,
+                    html.Div("\u2191", style={"fontSize": "26px",
+                                              "color": TEAL, "marginBottom": "10px"}),
+                    html.Div("Drag and drop a file here, or browse", style={
+                        "fontSize": "15px", "color": INK,
                         "fontWeight": "500", "marginTop": "6px"}),
                 ])),
             html.Div(id="doc-upload-status", style={
@@ -1039,4 +1041,4 @@ def back_to_dept(n):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True, port=8051)
+    app.run(host="0.0.0.0", debug=False, port=8051)

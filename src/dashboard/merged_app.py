@@ -62,7 +62,7 @@ app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</titl
   .page{background:#12140F!important;color:#EAEEE6;} #upload-data{display:flex!important;align-items:center;justify-content:center;}
   ._dash-loading{color:#4ADE80;}
   .dash-table-container .dash-spreadsheet td{background:#181B15!important;color:#EAEEE6!important;}
-  input,textarea{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;} .dash-uploader,#upload-data>div,#upload-data{background:#12140F!important;color:#EAEEE6!important;} #upload-status,#upload-status>*{background:transparent!important;} #upload-data:focus,#upload-data *:focus{outline:none!important;} #mapping-section:empty,#validation-section:empty,#analysis-section:empty,#prediction-section:empty{display:none!important;border:none!important;} .drill-note:empty{display:none!important;}
+  input,textarea{background:#181B15!important;color:#EAEEE6!important;border-color:#2B2F28!important;} .dash-uploader,#upload-data>div,#upload-data{background:#12140F!important;color:#EAEEE6!important;} #upload-status,#upload-status>*{background:transparent!important;} #upload-data:focus,#upload-data *:focus{outline:none!important;} #mapping-section:empty,#validation-section:empty,#analysis-section:empty,#prediction-section:empty{display:none!important;border:none!important;} .drill-note:empty{display:none!important;} .Select__control{background:#181B15!important;border-color:#2B2F28!important;} .Select__control--is-focused{border-color:#4ADE80!important;box-shadow:none!important;} .Select__menu{background:#181B15!important;border:1px solid #2B2F28!important;} .Select__single-value,.Select__input-container,.Select__input{color:#EAEEE6!important;} .Select__placeholder{color:#8A927E!important;} .Select__option{background:#181B15!important;color:#EAEEE6!important;} .Select__option--is-focused{background:#2B2F28!important;} .Select__option--is-selected{background:#22C55E!important;color:#12140F!important;} .Select__multi-value{background:#12140F!important;border:1px solid #2B2F28!important;} .Select__multi-value__label{color:#EAEEE6!important;} .Select__indicator-separator{background:#2B2F28!important;} .Select__dropdown-indicator{color:#8A927E!important;}
 </style></head><body>{%app_entry%}<footer>{%config%}{%scripts%}{%renderer%}</footer></body></html>'''
 
 
@@ -657,7 +657,7 @@ def _default_features(cols):
     return feats
 
 
-def _eda_figures(df, mapping):
+def _eda_figures(df, mapping, dist_col=None):
     """Build EDA figures: missingness, a distribution, correlation heatmap."""
     figs = []
 
@@ -675,7 +675,7 @@ def _eda_figures(df, mapping):
                     if pd.api.types.is_numeric_dtype(df[c])][:12]
 
     if numeric_cols:
-        col = numeric_cols[0]
+        col = dist_col if dist_col in numeric_cols else numeric_cols[0]
         f = go.Figure(go.Histogram(
             x=df[col].dropna(), marker=dict(color=TEAL), nbinsx=30))
         apply_theme(f, height=300)
@@ -694,17 +694,42 @@ def _eda_figures(df, mapping):
 
 
 
+def _eda_chart_blocks(eda):
+    """Turn (title, fig) pairs into drill-panel Divs."""
+    return [html.Div(className="drill-panel", children=[
+        html.Strong(title, style={"color": INK}),
+        dcc.Graph(figure=fig),
+    ]) for title, fig in eda]
+
+
 def _analysis_and_prediction_ui(df):
     """Build the EDA charts + the target/feature pickers + train button."""
     cols = list(df.columns)
+    numeric_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
+    cat_cols = [c for c in cols if not pd.api.types.is_numeric_dtype(df[c])]
     eda = _eda_figures(df, None)
+    filter_ui = html.Div(className="drill-panel", children=[
+        html.Div(className="section-label", children="Filters"),
+        html.Label("Filter by column", className="control-label"),
+        dcc.Dropdown(id="flt-col",
+                     options=[{"label": c, "value": c} for c in cat_cols],
+                     placeholder="Categorical column", className="dropdown"),
+        html.Label("Value", className="control-label",
+                   style={"marginTop": "12px"}),
+        dcc.Dropdown(id="flt-val", options=[], placeholder="Pick value",
+                     className="dropdown"),
+        html.Label("Distribution column", className="control-label",
+                   style={"marginTop": "12px"}),
+        dcc.Dropdown(id="flt-dist",
+                     options=[{"label": c, "value": c} for c in numeric_cols],
+                     value=(numeric_cols[0] if numeric_cols else None),
+                     placeholder="Numeric column", className="dropdown"),
+    ])
     eda_children = [html.Div(className="section-label",
-                             children="Step 5 · Analysis (EDA)")]
-    for title, fig in eda:
-        eda_children.append(html.Div(className="drill-panel", children=[
-            html.Strong(title, style={"color": INK}),
-            dcc.Graph(figure=fig),
-        ]))
+                             children="Step 5 · Analysis (EDA)"),
+                    filter_ui,
+                    html.Div(id="eda-charts")]
+    eda_children[2].children = _eda_chart_blocks(eda)
 
     predict_ui = html.Div([
         html.Div(className="section-label", children="Step 6 · Prediction"),
@@ -721,8 +746,7 @@ def _analysis_and_prediction_ui(df):
                    style={"marginTop": "12px"}),
         dcc.Dropdown(id="up-features",
                      options=[{"label": c, "value": c} for c in cols],
-                     value=_default_features(cols),
-                     multi=True, placeholder="Input columns",
+                     multi=True, placeholder="Select target first",
                      className="dropdown"),
         html.Button("Train model", id="up-train-btn", n_clicks=0, style={
             "marginTop": "16px", "padding": "10px 24px", "background": TEAL,
@@ -732,6 +756,57 @@ def _analysis_and_prediction_ui(df):
     ])
 
     return html.Div(eda_children + [predict_ui])
+
+
+@app.callback(
+    Output("up-features", "value"),
+    Input("up-target", "value"),
+    State("data-store", "data"),
+    prevent_initial_call=True,
+)
+def _suggest_features(target, data_json):
+    """Auto-suggest feature columns once a target is chosen (target excluded)."""
+    if not target or data_json is None:
+        return []
+    df = pd.read_json(io.StringIO(data_json), orient="split")
+    feats = [c for c in _default_features(list(df.columns)) if c != target]
+    return feats
+
+
+@app.callback(
+    Output("flt-val", "options"),
+    Output("flt-val", "value"),
+    Input("flt-col", "value"),
+    State("data-store", "data"),
+    prevent_initial_call=True,
+)
+def _fill_filter_values(col, data_json):
+    """Populate the value dropdown from the chosen column's uniques."""
+    if not col or data_json is None:
+        return [], None
+    df = pd.read_json(io.StringIO(data_json), orient="split")
+    vals = df[col].dropna().unique().tolist()[:200]
+    return [{"label": str(v), "value": str(v)} for v in vals], None
+
+
+@app.callback(
+    Output("eda-charts", "children"),
+    Input("flt-col", "value"),
+    Input("flt-val", "value"),
+    Input("flt-dist", "value"),
+    State("data-store", "data"),
+    prevent_initial_call=True,
+)
+def _refresh_eda(col, val, dist_col, data_json):
+    """Re-render EDA charts on the filtered dataframe."""
+    if data_json is None:
+        return no_update
+    df = pd.read_json(io.StringIO(data_json), orient="split")
+    if col and val is not None:
+        df = df[df[col].astype(str) == str(val)]
+    if not len(df):
+        return html.Div("No rows match this filter.", className="drill-note")
+    return _eda_chart_blocks(_eda_figures(df, None, dist_col=dist_col))
 
 
 @app.callback(
