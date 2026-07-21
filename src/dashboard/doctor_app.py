@@ -820,7 +820,7 @@ def open_dept(clicks, scored_json):
     table = dash_table.DataTable(
         data=tbl.to_dict("records"),
         columns=[{"name": c, "id": c} for c in tbl.columns],
-        sort_action="native", filter_action="native", page_size=15,
+        sort_action="native", filter_action="native", page_size=10,
         style_table={"overflowX": "auto"},
         style_cell={"fontSize": "13px", "padding": "9px",
                     "fontFamily": "inherit", "textAlign": "left"},
