@@ -7,6 +7,8 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from rag.auth import register, verify_login
+from api.jwt_utils import create_access_token, get_current_user
+from fastapi import Depends
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -34,5 +36,17 @@ def login_admin(req: LoginRequest):
     """Verify credentials. Returns success + hospital name (or null)."""
     ok, hospital = verify_login(req.username, req.password)
     if ok:
-        return {"success": True, "hospital": hospital}
+        token = create_access_token(req.username, hospital)
+        return {
+            "success": True,
+            "hospital": hospital,
+            "access_token": token,
+            "token_type": "bearer",
+        }
     return {"success": False, "hospital": None, "message": "Invalid username or password."}
+
+
+@router.get("/me")
+def whoami(user: dict = Depends(get_current_user)):
+    """Return the identity carried by the caller's token."""
+    return {"success": True, **user}

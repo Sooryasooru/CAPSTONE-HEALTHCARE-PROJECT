@@ -167,3 +167,4 @@ langchain-community==0.4.2
 langchain-google-genai==4.2.6
 pymupdf==1.27.2.3
 kaleido==0.2.1
+PyJWT==2.10.1
