@@ -55,6 +55,7 @@ load_dotenv()
 
 KNOWLEDGE_BASE_PATH = "data/processed/knowledge_base.jsonl"
 METADATA_PATH = "data/processed/chunks.pkl"
+LC_FAISS_DIR = "data/processed/lc_faiss"
 
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 GEMINI_MODEL = "gemini-2.5-flash"
@@ -98,8 +99,18 @@ class LangChainRAGEngine:
 
         # Build a LangChain FAISS vectorstore from the documents.
         # (Re-embeds via LangChain's interface so the store is LC-native.)
-        logger.info("Building LangChain FAISS vectorstore (%d docs)...", len(docs))
-        self.vectorstore = FAISS.from_documents(docs, self.embeddings)
+        # Load the pre-built LangChain FAISS store if it exists; only embed
+        # all 6,832 chunks when the store is missing (first run / rebuild).
+        if os.path.isdir(LC_FAISS_DIR):
+            logger.info("Loading saved LangChain FAISS store from %s", LC_FAISS_DIR)
+            self.vectorstore = FAISS.load_local(
+                LC_FAISS_DIR, self.embeddings,
+                allow_dangerous_deserialization=True)
+        else:
+            logger.info("No saved store - building LangChain FAISS vectorstore (%d docs)...", len(docs))
+            self.vectorstore = FAISS.from_documents(docs, self.embeddings)
+            self.vectorstore.save_local(LC_FAISS_DIR)
+            logger.info("Saved LangChain FAISS store -> %s", LC_FAISS_DIR)
         self.retriever = self.vectorstore.as_retriever(search_kwargs={"k": TOP_K})
 
         logger.info("Loading Gemini chat model: %s", GEMINI_MODEL)
