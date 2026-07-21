@@ -24,11 +24,16 @@ def main():
         rr = 1 / (rels.index(1) + 1) if hit else 0.0
         ndcg = dcg(rels) / dcg(sorted(rels, reverse=True)) if hit else 0.0
         prec = sum(rels) / K
+        p1 = sum(rels[:1]) / 1
+        p3 = sum(rels[:3]) / 3
         rec = len(gold & set(got)) / len(gold) if gold else 0.0
         agg["hit"] += hit; agg["mrr"] += rr; agg["ndcg"] += ndcg
         agg["p"] += prec; agg["rec"] += rec
+        agg["p1"] = agg.get("p1", 0.0) + p1
+        agg["p3"] = agg.get("p3", 0.0) + p3
         rows.append({"id": q["id"], "question": q["question"], "topic": q["topic"],
                      "hit": hit, "mrr": round(rr, 3), "ndcg": round(ndcg, 3),
+                     "precision_at_1": round(p1, 3), "precision_at_3": round(p3, 3),
                      "precision_at_k": round(prec, 3), "recall_at_k": round(rec, 3),
                      "retrieved_doc_ids": "|".join(got)})
     n = len(gt)
@@ -40,6 +45,8 @@ def main():
     print(f"  Hit Rate@{K}    : {agg['hit']/n*100:.1f}%")
     print(f"  MRR           : {agg['mrr']/n:.3f}")
     print(f"  NDCG@{K}       : {agg['ndcg']/n:.3f}")
+    print(f"  Precision@1   : {agg['p1']/n:.3f}")
+    print(f"  Precision@3   : {agg['p3']/n:.3f}")
     print(f"  Precision@{K}  : {agg['p']/n:.3f}")
     print(f"  Recall@{K}     : {agg['rec']/n:.3f}")
     print("=" * 55)
