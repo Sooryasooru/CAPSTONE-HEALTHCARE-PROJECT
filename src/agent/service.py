@@ -43,9 +43,16 @@ app.add_middleware(
 )
 
 
+class HistoryTurn(BaseModel):
+    """One prior turn of the conversation, replayed for context."""
+    role: str  # "user" or "assistant"
+    content: str
+
+
 class ChatRequest(BaseModel):
-    """Incoming question from the frontend."""
+    """Incoming question plus optional prior turns for multi-turn context."""
     question: str
+    history: list[HistoryTurn] = []
 
 
 class ChatResponse(BaseModel):
@@ -109,7 +116,14 @@ def chat(req: ChatRequest) -> ChatResponse:
     logger.info("Agent question: %s", req.question)
 
     try:
-        result = AGENT.invoke({"messages": [HumanMessage(content=req.question)]})
+        msgs = []
+        for turn in req.history[-8:]:  # cap replay to the last 8 turns
+            if turn.role == "user":
+                msgs.append(HumanMessage(content=turn.content))
+            else:
+                msgs.append(AIMessage(content=turn.content))
+        msgs.append(HumanMessage(content=req.question))
+        result = AGENT.invoke({"messages": msgs})
     except Exception as exc:  # noqa: BLE001 - we re-classify below
         if _is_quota_error(exc):
             logger.warning("Gemini quota exhausted (429): %s", exc)

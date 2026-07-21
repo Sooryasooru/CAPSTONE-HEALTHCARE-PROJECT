@@ -43,7 +43,14 @@ export default function AskHaip({ nav, back }) {
       const res = await fetch(AGENT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({
+          question: q,
+          // Replay prior turns so the agent has multi-turn context.
+          history: messages.map((m) => ({
+            role: m.role === "user" ? "user" : "assistant",
+            content: m.text,
+          })),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {

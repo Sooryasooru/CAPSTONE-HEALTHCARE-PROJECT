@@ -4,10 +4,32 @@
 
 const API_BASE = "http://127.0.0.1:8000";
 
+// --- JWT session token (in-memory; cleared on refresh/sign-out) ---
+let authToken = null;
+
+export function setToken(token) {
+  authToken = token || null;
+}
+
+export function clearToken() {
+  authToken = null;
+}
+
+export function getToken() {
+  return authToken;
+}
+
+// Build headers, attaching the bearer token when we have one.
+function authHeaders(extra = {}) {
+  const h = { ...extra };
+  if (authToken) h["Authorization"] = `Bearer ${authToken}`;
+  return h;
+}
+
 export async function askHaip(question) {
   const res = await fetch(`${API_BASE}/route`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ question }),
   });
 
@@ -42,11 +64,15 @@ export async function loginHospital(username, password) {
     body: JSON.stringify({ username, password }),
   });
   if (!res.ok) throw new Error(`Backend responded ${res.status}`);
-  return res.json(); // { success, hospital, message? }
+  const data = await res.json(); // { success, hospital, role, access_token }
+  if (data.success && data.access_token) setToken(data.access_token);
+  return data;
 }
 
 export async function fetchDoctors() {
-  const res = await fetch(`${API_BASE}/doctors`);
+  const res = await fetch(`${API_BASE}/doctors`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error(`Backend responded ${res.status}`);
   return res.json(); // { departments: {dept: [{name, specialty, encounters}]}, total }
 }
