@@ -33,30 +33,6 @@ def dama_rate() -> dict:
     return {"value": value, "label": "DAMA Rate", "unit": "%"}
 
 
-def icu_sepsis_rate() -> dict:
-    """ICU sepsis rate = total sepsis cases / total ICU patients.
-
-    Sepsis is a leading driver of ICU mortality. Higher is worse.
-    """
-    df = engine.get_icu_severity_summary()
-    total_patients = df["patients"].sum()
-    total_sepsis = df["sepsis_cases"].sum()
-    value = float(round(100 * total_sepsis / total_patients, 1)) if total_patients else 0.0
-    return {"value": value, "label": "ICU Sepsis Rate", "unit": "%"}
-
-
-def icu_readmission_rate() -> dict:
-    """30-day ICU readmission rate = 30-day readmissions / total ICU patients.
-
-    A standard CMS quality measure; reflects care continuity. Lower is better.
-    """
-    df = engine.get_icu_severity_summary()
-    total_patients = df["patients"].sum()
-    total_readmits = df["readmissions_30d"].sum()
-    value = float(round(100 * total_readmits / total_patients, 1)) if total_patients else 0.0
-    return {"value": value, "label": "30-Day ICU Readmission Rate", "unit": "%"}
-
-
 def comorbidity_burden() -> dict:
     """Average comorbidity burden = mean prevalence across tracked conditions.
 
