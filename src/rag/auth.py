@@ -32,6 +32,7 @@ def init_db() -> None:
                 hospital_name TEXT NOT NULL,
                 username TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'admin',
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -56,14 +57,15 @@ def register(hospital_name: str, username: str, password: str) -> tuple[bool, st
         return False, "That username is already taken."
 
 
-def verify_login(username: str, password: str) -> tuple[bool, str | None]:
-    """Check credentials. Returns (success, hospital_name_or_None)."""
+def verify_login(username: str, password: str) -> tuple[bool, str | None, str | None]:
+    """Check credentials. Returns (success, hospital_name, role)."""
     init_db()
     with _get_conn() as conn:
         row = conn.execute(
-            "SELECT hospital_name, password_hash FROM hospital_admins WHERE username = ?",
+            "SELECT hospital_name, password_hash, role "
+            "FROM hospital_admins WHERE username = ?",
             (username.strip(),),
         ).fetchone()
     if row and check_password_hash(row[1], password):
-        return True, row[0]
-    return False, None
+        return True, row[0], row[2]
+    return False, None, None

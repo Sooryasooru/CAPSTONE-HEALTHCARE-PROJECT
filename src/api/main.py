@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from api.router import route
 from api.engines import run_engine
 from api.auth_routes import router as auth_router
+from api.jwt_utils import get_current_user
+from fastapi import Depends
 import pandas as pd
 from pathlib import Path
 
@@ -47,7 +49,8 @@ class RouteRequest(BaseModel):
 
 
 @app.post("/route")
-def route_question(req: RouteRequest):
+def route_question(req: RouteRequest,
+                   user: dict = Depends(get_current_user)):
     """Route a question and return both the decision and the engine's answer.
 
     Full path: question -> routing decision -> engine call -> answer.
@@ -60,7 +63,7 @@ def route_question(req: RouteRequest):
 
 
 @app.get("/doctors")
-def list_doctors():
+def list_doctors(user: dict = Depends(get_current_user)):
     """Provider directory grouped by department for the Doctors screen.
     Reads the sample dataset; O/E scoring is layered on in a later step.
     """

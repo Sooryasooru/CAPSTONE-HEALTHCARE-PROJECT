@@ -17,12 +17,14 @@ TOKEN_TTL_HOURS = 24
 _bearer = HTTPBearer(auto_error=False)
 
 
-def create_access_token(username: str, hospital: str) -> str:
-    """Sign a JWT carrying the user identity and their hospital scope."""
+def create_access_token(username: str, hospital: str,
+                       role: str = "admin") -> str:
+    """Sign a JWT carrying the user identity, hospital scope, and role."""
     now = datetime.now(timezone.utc)
     payload = {
         "sub": username,
         "hospital": hospital,
+        "role": role,
         "iat": now,
         "exp": now + timedelta(hours=TOKEN_TTL_HOURS),
     }
@@ -55,4 +57,23 @@ def get_current_user(
             detail="Not authenticated.",
         )
     payload = decode_access_token(creds.credentials)
-    return {"username": payload.get("sub"), "hospital": payload.get("hospital")}
+    return {
+        "username": payload.get("sub"),
+        "hospital": payload.get("hospital"),
+        "role": payload.get("role", "admin"),
+    }
+
+
+def require_role(*allowed: str):
+    """Dependency factory: allow only tokens whose role is in `allowed`.
+
+    Usage: user = Depends(require_role("admin"))
+    """
+    def _checker(user: dict = Depends(get_current_user)) -> dict:
+        if user.get("role") not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Requires role: {', '.join(allowed)}.",
+            )
+        return user
+    return _checker

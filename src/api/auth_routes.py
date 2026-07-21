@@ -34,12 +34,13 @@ def register_admin(req: RegisterRequest):
 @router.post("/login")
 def login_admin(req: LoginRequest):
     """Verify credentials. Returns success + hospital name (or null)."""
-    ok, hospital = verify_login(req.username, req.password)
+    ok, hospital, role = verify_login(req.username, req.password)
     if ok:
-        token = create_access_token(req.username, hospital)
+        token = create_access_token(req.username, hospital, role)
         return {
             "success": True,
             "hospital": hospital,
+            "role": role,
             "access_token": token,
             "token_type": "bearer",
         }
