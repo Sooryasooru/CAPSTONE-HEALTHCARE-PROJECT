@@ -27,17 +27,20 @@ OUT = "data/eval/generation_results.csv"
 CACHE = "data/eval/answers_cache.json"
 K = 5
 
+PROMPT = ("You are a careful medical-guideline assistant. Answer using ONLY "
+      "the numbered context passages. If the answer is not in the context, "
+      "say the guidelines do not cover it. Be concise and factual.\n\n"
+      "Context passages:\n\n{ctx}\n\nQuestion: {q}")
+
+
 def main():
     gt = json.load(open(GT))["questions"]
     r = Retriever(index_path="data/processed/faiss.index",
                   metadata_path="data/processed/chunks.pkl")
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",
+    judge_model = os.getenv("RAGAS_JUDGE_MODEL", "gemini-2.5-flash")
+    llm = ChatGoogleGenerativeAI(model=judge_model,
                                  google_api_key=os.environ["GEMINI_API_KEY"])
 
-    PROMPT = ("You are a careful medical-guideline assistant. Answer using ONLY "
-              "the numbered context passages. If the answer is not in the context, "
-              "say the guidelines do not cover it. Be concise and factual.\n\n"
-              "Context passages:\n\n{ctx}\n\nQuestion: {q}")
 
     if os.path.exists(CACHE):
         c = json.load(open(CACHE))
@@ -48,18 +51,6 @@ def main():
         json.dump({"questions": questions, "answers": answers, "contexts": contexts},
                   open(CACHE, "w"), indent=2)
         print(f"Cached answers -> {CACHE}")
-def _generate(gt, r, llm):
-    questions, answers, contexts = [], [], []
-    for i, q in enumerate(gt, 1):
-        hits = r.retrieve(q["question"], top_k_rerank=K)
-        ctx = [h["text"] for h in hits]
-        prompt = PROMPT.format(ctx="\n\n".join(f"[{j}] {t}" for j, t in enumerate(ctx, 1)),
-                               q=q["question"])
-        ans = llm.invoke(prompt).content
-        questions.append(q["question"]); answers.append(ans); contexts.append(ctx)
-        print(f"  [{i}/{len(gt)}] answered: {q['id']}")
-    return questions, answers, contexts
-
     ds = Dataset.from_dict({"question": questions, "answer": answers, "contexts": contexts})
     result = evaluate(
         ds, metrics=[faithfulness, answer_relevancy],
@@ -80,6 +71,18 @@ def _generate(gt, r, llm):
     print(f"  Hallucination Rate : {1 - f_score:.3f}")
     print("=" * 55)
     print(f"Saved -> {OUT}")
+def _generate(gt, r, llm):
+    questions, answers, contexts = [], [], []
+    for i, q in enumerate(gt, 1):
+        hits = r.retrieve(q["question"], top_k_rerank=K)
+        ctx = [h["text"] for h in hits]
+        prompt = PROMPT.format(ctx="\n\n".join(f"[{j}] {t}" for j, t in enumerate(ctx, 1)),
+                               q=q["question"])
+        ans = llm.invoke(prompt).content
+        questions.append(q["question"]); answers.append(ans); contexts.append(ctx)
+        print(f"  [{i}/{len(gt)}] answered: {q['id']}")
+    return questions, answers, contexts
+
 
 if __name__ == "__main__":
     main()
