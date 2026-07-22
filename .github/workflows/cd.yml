@@ -1,0 +1,44 @@
+name: HAIP CD
+
+# Validates that the deployable Docker artifacts build successfully.
+# Runs only after CI (tests) passes on main.
+
+on:
+  workflow_run:
+    workflows: ["HAIP CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  build-images:
+    # only run if the CI workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image (Dockerfile.python)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.python
+          push: false
+          tags: haip-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: haip-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Delivery summary
+        run: echo "Both deployable images built successfully — artifact is shippable."
