@@ -56,7 +56,9 @@ services:
       - ./src:/app/src
 
   agent_app:
-    image: healthcare-project-streamlit:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.python
     command: uvicorn agent.service:app --host 0.0.0.0 --port 8062
     working_dir: /app
     ports:

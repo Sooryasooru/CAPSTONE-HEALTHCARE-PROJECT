@@ -2,7 +2,7 @@
 // One function: send a question to /route, get back the routing decision
 // plus the engine's answer.
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
 // --- JWT session token (in-memory; cleared on refresh/sign-out) ---
 let authToken = null;

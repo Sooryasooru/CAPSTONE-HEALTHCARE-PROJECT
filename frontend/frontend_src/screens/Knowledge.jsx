@@ -3,7 +3,7 @@
 // no re-upload, no hospital picker needed.
 export default function Knowledge({ nav, back, session }) {
   const hospital = session?.hospital || "";
-  const src = `http://localhost:8501/?hospital=${encodeURIComponent(hospital)}`;
+  const src = `http://16.170.171.18:8501/?hospital=${encodeURIComponent(hospital)}`;
   return (
     <div className="dash-fullscreen">
       <button className="dash-back" onClick={() => nav(back)}>

@@ -9,7 +9,7 @@ export default function HospitalData({ nav, back }) {
       </button>
       <iframe
         className="dash-fullscreen-frame"
-        src="http://localhost:8060"
+        src="http://16.170.171.18:8060"
         title="Hospital data — Analytics & Data Intake"
       />
     </div>

@@ -4,7 +4,7 @@
 // reasoning trail, so the agent's work is visible to the clinician.
 import { useState, useRef, useEffect } from "react";
 
-const AGENT_URL = "http://localhost:8062/agent/chat";
+const AGENT_URL = "http://16.170.171.18:8062/agent/chat";
 
 const TOOL_LABELS = {
   search_guidelines: "Searched clinical guidelines",

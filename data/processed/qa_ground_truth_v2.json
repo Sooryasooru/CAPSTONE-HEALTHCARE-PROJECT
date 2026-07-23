@@ -1,0 +1,276 @@
+{
+  "description": "Content-derived golden set for HAIP RAG evaluation. Questions generated from document BODY TEXT by an LLM with an explicit instruction not to reuse title vocabulary, to avoid the lexical-overlap bias present in v1 (mean title overlap 0.53).",
+  "generator_model": "llama-3.1-8b-instant",
+  "questions": [
+    {
+      "id": "v2_q01",
+      "question": "What treatment options exist for a patient with episodic migraine who has tried at least 3 preventative treatments without success?",
+      "relevant_doc_ids": [
+        "7e942ad6eabe34289cbc791e0655f79d3c439fe8"
+      ],
+      "topic": "Rimegepant for preventing migraine",
+      "source_title": "Rimegepant for preventing migraine"
+    },
+    {
+      "id": "v2_q02",
+      "question": "How long should treatment with an oral medication like rimegepant be continued if the frequency of migraine attacks does not reduce by at least 50%?",
+      "relevant_doc_ids": [
+        "7e942ad6eabe34289cbc791e0655f79d3c439fe8"
+      ],
+      "topic": "Rimegepant for preventing migraine",
+      "source_title": "Rimegepant for preventing migraine"
+    },
+    {
+      "id": "v2_q03",
+      "question": "What are the recommended treatment options for a patient with suspected acute heart failure?",
+      "relevant_doc_ids": [
+        "06d1859543765cb4157e7205717c71be28be2a3b"
+      ],
+      "topic": "Acute heart failure: diagnosis and management",
+      "source_title": "Acute heart failure: diagnosis and management"
+    },
+    {
+      "id": "v2_q04",
+      "question": "How should a hospital organise care for a patient with suspected acute heart failure?",
+      "relevant_doc_ids": [
+        "06d1859543765cb4157e7205717c71be28be2a3b"
+      ],
+      "topic": "Acute heart failure: diagnosis and management",
+      "source_title": "Acute heart failure: diagnosis and management"
+    },
+    {
+      "id": "v2_q05",
+      "question": "What risk factors should be assessed for a patient presenting to hospital for the first time?",
+      "relevant_doc_ids": [
+        "b6a3e92c6f7ced02d0ae905ae333191f9c75e52d"
+      ],
+      "topic": "Delirium: prevention, diagnosis and management in hospital a",
+      "source_title": "Delirium: prevention, diagnosis and management in hospital and long-term care"
+    },
+    {
+      "id": "v2_q06",
+      "question": "What changes in a patient's condition should be observed for at presentation, if they are at risk of delirium?",
+      "relevant_doc_ids": [
+        "b6a3e92c6f7ced02d0ae905ae333191f9c75e52d"
+      ],
+      "topic": "Delirium: prevention, diagnosis and management in hospital a",
+      "source_title": "Delirium: prevention, diagnosis and management in hospital and long-term care"
+    },
+    {
+      "id": "v2_q07",
+      "question": "What are the common symptoms experienced by patients with granulomatosis with polyangiitis (GPA) or microscopic polyangiitis (MPA)?",
+      "relevant_doc_ids": [
+        "7b98403ccc4cf5b3564f65c98bcf1474392edff7"
+      ],
+      "topic": "Avacopan for treating severe active granulomatosis with poly",
+      "source_title": "Avacopan for treating severe active granulomatosis with polyangiitis or microscopic polyangiitis"
+    },
+    {
+      "id": "v2_q08",
+      "question": "How do ANCA-associated vasculitis conditions, such as GPA or MPA, typically affect a patient's quality of life?",
+      "relevant_doc_ids": [
+        "7b98403ccc4cf5b3564f65c98bcf1474392edff7"
+      ],
+      "topic": "Avacopan for treating severe active granulomatosis with poly",
+      "source_title": "Avacopan for treating severe active granulomatosis with polyangiitis or microscopic polyangiitis"
+    },
+    {
+      "id": "v2_q09",
+      "question": "What treatment options exist for a patient with chronic kidney disease stage 3b to 5 and persistent hyperkalaemia?",
+      "relevant_doc_ids": [
+        "a569cc1adf2fb659b21e15cb7f96baa47bdf5fc7"
+      ],
+      "topic": "Sodium zirconium cyclosilicate for treating hyperkalaemia",
+      "source_title": "Sodium zirconium cyclosilicate for treating hyperkalaemia"
+    },
+    {
+      "id": "v2_q10",
+      "question": "Can a patient with life-threatening hyperkalaemia be treated with sodium zirconium cyclosilicate alongside standard care in emergency care?",
+      "relevant_doc_ids": [
+        "a569cc1adf2fb659b21e15cb7f96baa47bdf5fc7"
+      ],
+      "topic": "Sodium zirconium cyclosilicate for treating hyperkalaemia",
+      "source_title": "Sodium zirconium cyclosilicate for treating hyperkalaemia"
+    },
+    {
+      "id": "v2_q11",
+      "question": "What are the early symptoms of ovarian cancer that may be mistaken for other pelvic or abdominal conditions?",
+      "relevant_doc_ids": [
+        "0483c5066e5d4e35442aba33392a8cb8ef3a5077"
+      ],
+      "topic": "Maximal cytoreductive surgery for advanced ovarian cancer",
+      "source_title": "Maximal cytoreductive surgery for advanced ovarian cancer"
+    },
+    {
+      "id": "v2_q12",
+      "question": "What is the typical stage of ovarian cancer at the time of diagnosis and how does this affect patient outcomes?",
+      "relevant_doc_ids": [
+        "0483c5066e5d4e35442aba33392a8cb8ef3a5077"
+      ],
+      "topic": "Maximal cytoreductive surgery for advanced ovarian cancer",
+      "source_title": "Maximal cytoreductive surgery for advanced ovarian cancer"
+    },
+    {
+      "id": "v2_q13",
+      "question": "What treatment options are available for a patient with non-small-cell lung cancer who has a specific genetic alteration?",
+      "relevant_doc_ids": [
+        "44f05e4b1760033a1e2e9c68f3ccf1dcff2f131e"
+      ],
+      "topic": "Tepotinib for treating advanced non-small-cell lung cancer w",
+      "source_title": "Tepotinib for treating advanced non-small-cell lung cancer with MET gene alterations"
+    },
+    {
+      "id": "v2_q14",
+      "question": "What is the prognosis for a patient with non-small-cell lung cancer who has a genetic alteration in the MET gene?",
+      "relevant_doc_ids": [
+        "44f05e4b1760033a1e2e9c68f3ccf1dcff2f131e"
+      ],
+      "topic": "Tepotinib for treating advanced non-small-cell lung cancer w",
+      "source_title": "Tepotinib for treating advanced non-small-cell lung cancer with MET gene alterations"
+    },
+    {
+      "id": "v2_q15",
+      "question": "What are the treatment options for a patient with intermediate/poor-risk advanced renal cell carcinoma?",
+      "relevant_doc_ids": [
+        "48b6416063a9e9973c61a4bd34ca2e8a6335dcda"
+      ],
+      "topic": "Nivolumab with ipilimumab for untreated advanced renal cell ",
+      "source_title": "Nivolumab with ipilimumab for untreated advanced renal cell carcinoma"
+    },
+    {
+      "id": "v2_q16",
+      "question": "What is the typical cost of a vial of nivolumab to the NHS, excluding VAT?",
+      "relevant_doc_ids": [
+        "48b6416063a9e9973c61a4bd34ca2e8a6335dcda"
+      ],
+      "topic": "Nivolumab with ipilimumab for untreated advanced renal cell ",
+      "source_title": "Nivolumab with ipilimumab for untreated advanced renal cell carcinoma"
+    },
+    {
+      "id": "v2_q17",
+      "question": "What are the treatment options for a patient with moderately to severely active Crohn's disease who has had an inadequate response to conventional therapy?",
+      "relevant_doc_ids": [
+        "5f52bb5bf021baa7a9564b9e9d36370170cbcc6e"
+      ],
+      "topic": "Upadacitinib for previously treated moderately to severely a",
+      "source_title": "Upadacitinib for previously treated moderately to severely active Crohn's disease"
+    },
+    {
+      "id": "v2_q18",
+      "question": "What is the typical cost of a 28-tablet pack of a specific medication used to treat Crohn's disease, before any commercial discounts are applied?",
+      "relevant_doc_ids": [
+        "5f52bb5bf021baa7a9564b9e9d36370170cbcc6e"
+      ],
+      "topic": "Upadacitinib for previously treated moderately to severely a",
+      "source_title": "Upadacitinib for previously treated moderately to severely active Crohn's disease"
+    },
+    {
+      "id": "v2_q19",
+      "question": "What are the typical management approaches for patients with vision-impacting vitreous floaters?",
+      "relevant_doc_ids": [
+        "c1d8b48336eae4f35babe1ced72cce0a32e93642"
+      ],
+      "topic": "YAG laser vitreolysis for symptomatic vitreous floaters",
+      "source_title": "YAG laser vitreolysis for symptomatic vitreous floaters"
+    },
+    {
+      "id": "v2_q20",
+      "question": "What is the process for performing YAG laser vitreolysis, and what are the possible requirements for treatment completion?",
+      "relevant_doc_ids": [
+        "c1d8b48336eae4f35babe1ced72cce0a32e93642"
+      ],
+      "topic": "YAG laser vitreolysis for symptomatic vitreous floaters",
+      "source_title": "YAG laser vitreolysis for symptomatic vitreous floaters"
+    },
+    {
+      "id": "v2_q21",
+      "question": "What is the most serious potential complication of endoscopic balloon dilation for subglottic or tracheal stenosis?",
+      "relevant_doc_ids": [
+        "360b56c23e3c5d83840a3a0bce8af2053582dce6"
+      ],
+      "topic": "Endoscopic balloon dilation for subglottic or tracheal steno",
+      "source_title": "Endoscopic balloon dilation for subglottic or tracheal stenosis"
+    },
+    {
+      "id": "v2_q22",
+      "question": "For a patient with subglottic or tracheal stenosis, what are the requirements for using endoscopic balloon dilation in adults?",
+      "relevant_doc_ids": [
+        "360b56c23e3c5d83840a3a0bce8af2053582dce6"
+      ],
+      "topic": "Endoscopic balloon dilation for subglottic or tracheal steno",
+      "source_title": "Endoscopic balloon dilation for subglottic or tracheal stenosis"
+    },
+    {
+      "id": "v2_q23",
+      "question": "What treatment options exist for a patient with multiple myeloma who has already received one previous therapy?",
+      "relevant_doc_ids": [
+        "0d94a4ead190055657fd5266144eb686882d75ed"
+      ],
+      "topic": "Ixazomib with lenalidomide and dexamethasone for treating re",
+      "source_title": "Ixazomib with lenalidomide and dexamethasone for treating relapsed or refractory multiple myeloma"
+    },
+    {
+      "id": "v2_q24",
+      "question": "What is the typical cost of a pack of ixazomib capsules to the NHS?",
+      "relevant_doc_ids": [
+        "0d94a4ead190055657fd5266144eb686882d75ed"
+      ],
+      "topic": "Ixazomib with lenalidomide and dexamethasone for treating re",
+      "source_title": "Ixazomib with lenalidomide and dexamethasone for treating relapsed or refractory multiple myeloma"
+    },
+    {
+      "id": "v2_q25",
+      "question": "What treatment options exist for a patient with high-risk non-muscle-invasive bladder cancer who has not responded to BCG treatment?",
+      "relevant_doc_ids": [
+        "3da66e25e1647f85bfeceb093efa3598e7de33d8"
+      ],
+      "topic": "Synergo for non-muscle-invasive bladder cancer",
+      "source_title": "Synergo for non-muscle-invasive bladder cancer"
+    },
+    {
+      "id": "v2_q26",
+      "question": "What are the alternative treatments available for a patient with high-risk non-muscle-invasive bladder cancer who cannot or does not want to undergo BCG treatment?",
+      "relevant_doc_ids": [
+        "3da66e25e1647f85bfeceb093efa3598e7de33d8"
+      ],
+      "topic": "Synergo for non-muscle-invasive bladder cancer",
+      "source_title": "Synergo for non-muscle-invasive bladder cancer"
+    },
+    {
+      "id": "v2_q27",
+      "question": "What are the necessary arrangements for a healthcare organisation to implement intramuscular diaphragm stimulation for patients with high spinal cord injuries?",
+      "relevant_doc_ids": [
+        "86850d67a2fa2b5ab6ec6eaf2b662d6baaaa9fa0"
+      ],
+      "topic": "Intramuscular diaphragm stimulation for ventilator-dependent",
+      "source_title": "Intramuscular diaphragm stimulation for ventilator-dependent chronic respiratory failure from high spinal cord injuries"
+    },
+    {
+      "id": "v2_q28",
+      "question": "What are the key considerations for a multidisciplinary team when selecting patients for intramuscular diaphragm stimulation?",
+      "relevant_doc_ids": [
+        "86850d67a2fa2b5ab6ec6eaf2b662d6baaaa9fa0"
+      ],
+      "topic": "Intramuscular diaphragm stimulation for ventilator-dependent",
+      "source_title": "Intramuscular diaphragm stimulation for ventilator-dependent chronic respiratory failure from high spinal cord injuries"
+    },
+    {
+      "id": "v2_q29",
+      "question": "What treatment options are available for a patient with muscle-invasive urothelial cancer who is at high risk of recurrence after radical surgery and cannot receive platinum-based chemotherapy?",
+      "relevant_doc_ids": [
+        "990ba0d997dda25800b9050edf4e3251d5e4efa0"
+      ],
+      "topic": "Nivolumab for adjuvant treatment of invasive urothelial canc",
+      "source_title": "Nivolumab for adjuvant treatment of invasive urothelial cancer at high risk of recurrence"
+    },
+    {
+      "id": "v2_q30",
+      "question": "What are the criteria for using nivolumab as an adjuvant treatment for a patient with muscle-invasive urothelial cancer at high risk of recurrence?",
+      "relevant_doc_ids": [
+        "990ba0d997dda25800b9050edf4e3251d5e4efa0"
+      ],
+      "topic": "Nivolumab for adjuvant treatment of invasive urothelial canc",
+      "source_title": "Nivolumab for adjuvant treatment of invasive urothelial cancer at high risk of recurrence"
+    }
+  ]
+}
