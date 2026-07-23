@@ -445,6 +445,7 @@ def build_intake_layout() -> html.Div:
 
         dcc.Store(id="data-store"),
         dcc.Store(id="mapping-store"),
+        dcc.Store(id="metrics-store"),
     ])
 
 
@@ -867,6 +868,7 @@ def _forecast_from_upload(df, periods=6):
 @app.callback(
     Output("up-results", "children"),
     Output("report-section", "style"),
+    Output("metrics-store", "data"),
     Input("up-train-btn", "n_clicks"),
     State("data-store", "data"),
     State("up-target", "value"),
@@ -877,18 +879,18 @@ def train_uploaded(n_clicks, data_json, target, features):
     """Train the AutoML engine on the uploaded data and show results."""
     from dashboard.pipeline import train_on_upload
     if not n_clicks or data_json is None:
-        return None, {"marginTop": "16px", "display": "none"}
+        return None, {"marginTop": "16px", "display": "none"}, None
     if not target:
-        return html.Div("Pick a target column.", className="drill-note"), {"marginTop": "16px", "display": "none"}
+        return html.Div("Pick a target column.", className="drill-note"), {"marginTop": "16px", "display": "none"}, None
     if not features:
         return html.Div("Pick at least one feature column.",
-                        className="drill-note"), {"marginTop": "16px", "display": "none"}
+                        className="drill-note"), {"marginTop": "16px", "display": "none"}, None
 
     df = pd.read_json(io.StringIO(data_json), orient="split")
     result = train_on_upload(df, target, features)
     if result.error:
         return html.Div(f"Could not train: {result.error}",
-                        className="drill-note", style={"color": RED}), {"marginTop": "16px", "display": "none"}
+                        className="drill-note", style={"color": RED}), {"marginTop": "16px", "display": "none"}, None
 
     cards = html.Div(className="kpi-row", children=[
         html.Div(className="kpi-card", style={"borderLeft": f"5px solid {TEAL}"},
@@ -945,7 +947,14 @@ def train_uploaded(n_clicks, data_json, target, features):
             "not diagnostic outputs. Use the forecast for capacity planning.",
             className="drill-note"),
     ]))
-    return html.Div(children), {"marginTop": "16px", "display": "block"}
+    metrics_payload = {
+        "problem_type": result.problem_type,
+        "target": result.target,
+        "n_train": result.n_train,
+        "n_test": result.n_test,
+        "metrics": {str(k): str(v) for k, v in result.metrics.items()},
+    }
+    return html.Div(children), {"marginTop": "16px", "display": "block"}, metrics_payload
 
 
 # ---------------------------------------------------------------------------
@@ -1172,9 +1181,10 @@ def render_tab(tab: str) -> html.Div:
     Input("dl-report-btn", "n_clicks"),
     State("data-store", "data"),
     State("mapping-store", "data"),
+    State("metrics-store", "data"),
     prevent_initial_call=True,
 )
-def download_report(n_clicks, data_json, mapping):
+def download_report(n_clicks, data_json, mapping, model_metrics):
     """Build a PDF summary of the uploaded dataset and stream it back.
 
     Reads the stored dataframe + column mapping, computes the same headline
@@ -1218,13 +1228,26 @@ def download_report(n_clicks, data_json, mapping):
         else:
             charts.append(res)
 
-    recommendation = (
-        "This report summarises the uploaded dataset only. Figures are "
-        "descriptive analytics on the hospital's own data — no predictive "
-        "model is trained here. HAIP is a proof-of-concept decision-support "
-        "tool on synthetic / de-identified data; outputs are triage aids for "
-        "human review, not diagnostic decisions."
-    )
+    if model_metrics and model_metrics.get("metrics"):
+        for k, v in model_metrics["metrics"].items():
+            kpis[f"Model {k}"] = v
+        recommendation = (
+            f"This report summarises the uploaded dataset and a "
+            f"{model_metrics.get('problem_type', 'predictive')} model trained on it "
+            f"(target '{model_metrics.get('target')}', {model_metrics.get('n_train')} "
+            f"training rows, {model_metrics.get('n_test')} test rows, Random Forest). "
+            "HAIP is a proof-of-concept decision-support tool on synthetic / "
+            "de-identified data; outputs are triage aids for human review, not "
+            "diagnostic decisions."
+        )
+    else:
+        recommendation = (
+            "This report summarises the uploaded dataset only. Figures are "
+            "descriptive analytics on the hospital's own data — no predictive "
+            "model was trained in this session. HAIP is a proof-of-concept "
+            "decision-support tool on synthetic / de-identified data; outputs "
+            "are triage aids for human review, not diagnostic decisions."
+        )
 
     pdf_bytes = build_hospital_report(
         kpis=kpis,
