@@ -23,7 +23,7 @@ V1 = "data/processed/qa_ground_truth.json"
 CHUNKS = "data/processed/chunks.pkl"
 OUT = "data/processed/qa_ground_truth_v2.json"
 QUESTIONS_PER_DOC = 2
-MODEL = os.getenv("GOLDEN_SET_MODEL", "llama-3.3-70b-versatile")
+MODEL = os.getenv("GOLDEN_SET_MODEL", "llama-3.1-8b-instant")
 
 PROMPT = """You are helping build an evaluation set for a clinical guideline
 retrieval system.
@@ -64,7 +64,7 @@ def main():
             print(f"  [{i}/{len(gold_ids)}] SKIP {doc_id[:8]} (no chunks)")
             continue
         # sample body text from the middle of the doc, avoiding title-heavy start
-        body = " ".join(c["text"] for c in docs[1:6])[:4000] or docs[0]["text"][:4000]
+        body = " ".join(c["text"] for c in docs[1:4])[:1800] or docs[0]["text"][:1800]
         title = str(docs[0].get("title"))
 
         try:
