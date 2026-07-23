@@ -19,6 +19,7 @@ import os
 from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
@@ -35,17 +36,25 @@ load_dotenv()
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 
-def _build_llm() -> ChatGoogleGenerativeAI:
+def _build_llm():
     """Create the Gemini chat model, bound to the tool whitelist.
 
     `bind_tools` tells Gemini which tools exist and their schemas, so it can
     emit structured tool calls. It can ONLY call these — nothing else.
     """
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        temperature=0.1,  # low: clinical work wants consistency, not creativity
-        google_api_key=GEMINI_KEY,
-    )
+    if os.getenv("HAIP_AGENT_BACKEND") == "groq":
+        # Eval backend: Groq has a far larger free quota than Gemini's 20/day.
+        llm = ChatGroq(
+            model=os.getenv("HAIP_AGENT_MODEL", "llama-3.3-70b-versatile"),
+            temperature=0.1,
+            groq_api_key=os.getenv("GROQ_API_KEY"),
+        )
+    else:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0.1,  # low: clinical work wants consistency, not creativity
+            google_api_key=GEMINI_KEY,
+        )
     return llm.bind_tools(ALL_TOOLS)
 
 

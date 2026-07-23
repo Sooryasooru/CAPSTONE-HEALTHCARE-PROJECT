@@ -18,6 +18,7 @@ from ragas.metrics import faithfulness, answer_relevancy
 from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from src.rag.retriever import Retriever
 
@@ -37,9 +38,10 @@ def main():
     gt = json.load(open(GT))["questions"]
     r = Retriever(index_path="data/processed/faiss.index",
                   metadata_path="data/processed/chunks.pkl")
-    judge_model = os.getenv("RAGAS_JUDGE_MODEL", "gemini-2.5-flash")
-    llm = ChatGoogleGenerativeAI(model=judge_model,
-                                 google_api_key=os.environ["GEMINI_API_KEY"])
+    judge_model = os.getenv("RAGAS_JUDGE_MODEL", "llama-3.3-70b-versatile")
+    llm = ChatGroq(model=judge_model,
+                   groq_api_key=os.environ["GROQ_API_KEY"],
+                   temperature=0)
 
 
     if os.path.exists(CACHE):

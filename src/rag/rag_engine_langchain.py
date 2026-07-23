@@ -48,6 +48,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 
 from src.rag.safety import safety_check
 
@@ -114,10 +115,18 @@ class LangChainRAGEngine:
         self.retriever = self.vectorstore.as_retriever(search_kwargs={"k": TOP_K})
 
         logger.info("Loading Gemini chat model: %s", GEMINI_MODEL)
-        self.llm = ChatGoogleGenerativeAI(
-            model=GEMINI_MODEL,
-            google_api_key=os.environ["GEMINI_API_KEY"],
-        )
+        if os.getenv("HAIP_RAG_BACKEND") == "groq":
+            # Eval backend: Groq's free quota is far larger than Gemini's.
+            self.llm = ChatGroq(
+                model=os.getenv("HAIP_RAG_MODEL", "llama-3.1-8b-instant"),
+                groq_api_key=os.environ["GROQ_API_KEY"],
+                temperature=0,
+            )
+        else:
+            self.llm = ChatGoogleGenerativeAI(
+                model=GEMINI_MODEL,
+                google_api_key=os.environ["GEMINI_API_KEY"],
+            )
 
         # LCEL chain: retrieve -> format -> prompt -> LLM -> string.
         self.chain = (

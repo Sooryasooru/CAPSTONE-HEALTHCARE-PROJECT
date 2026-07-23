@@ -13,7 +13,6 @@ data/raw/
 src/prediction/classification/models/
 
 # Trained model artifacts (regenerate with models.py)
-src/prediction/classification/models/
 
 # Synthea tool + raw output
 synthea/synthea-with-dependencies.jar
@@ -21,12 +20,9 @@ synthea/output/fhir/
 synthea/output/metadata/
 
 # Raw and legacy data (not versioned)
-data/raw/
 data/raw_legacy/
 # Data — regeneratable, never commit
 synthea/
-data/raw_legacy/
-data/raw/
 *.arrow
 *.jar
 *.csv
@@ -39,3 +35,5 @@ data/processed/knowledge_base.jsonl
 *.pdf
 data/auth.db
 *.db
+
+*.bak

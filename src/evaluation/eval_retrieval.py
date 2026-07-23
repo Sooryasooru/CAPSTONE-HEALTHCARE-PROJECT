@@ -4,8 +4,9 @@ import json, math, sys, csv
 sys.path.insert(0, ".")
 from src.rag.retriever import Retriever
 
-GT = "data/processed/qa_ground_truth.json"
-OUT = "data/eval/retrieval_results.csv"
+import os
+GT = os.getenv("HAIP_GOLDEN_SET", "data/processed/qa_ground_truth.json")
+OUT = os.getenv("HAIP_EVAL_OUT", "data/eval/retrieval_results.csv")
 K = 5
 
 def dcg(rels): return sum(r / math.log2(i + 2) for i, r in enumerate(rels))
