@@ -36,4 +36,5 @@ data/processed/knowledge_base.jsonl
 data/auth.db
 *.db
 
-*.bak
+*.bak*.pem
+*.pem
