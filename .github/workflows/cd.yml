@@ -1,8 +1,5 @@
 name: HAIP CD
 
-# Validates that the deployable Docker artifacts build successfully.
-# Runs only after CI (tests) passes on main.
-
 on:
   workflow_run:
     workflows: ["HAIP CI"]
@@ -10,35 +7,54 @@ on:
     branches: [main]
 
 jobs:
-  build-images:
-    # only run if the CI workflow succeeded
+  build-and-deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend image (Dockerfile.python)
+      - name: Build & push backend
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.python
-          push: false
-          tags: haip-backend:ci
+          push: true
+          tags: ghcr.io/sooryasooru/haip-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build frontend image
+      - name: Build & push frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          push: false
-          tags: haip-frontend:ci
+          push: true
+          tags: ghcr.io/sooryasooru/haip-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Delivery summary
-        run: echo "Both deployable images built successfully — artifact is shippable."
+      - name: Deploy on EC2 over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/CAPSTONE-HEALTHCARE-PROJECT
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u sooryasooru --password-stdin
+            git pull
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
