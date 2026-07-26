@@ -1,0 +1,33 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: eu-north-1
+    ACCOUNT_ID: "700640309357"
+    BACKEND_REPO: haip-backend
+    FRONTEND_REPO: haip-frontend
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+      - BACKEND_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO
+      - FRONTEND_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO
+
+  build:
+    commands:
+      - echo Building backend image...
+      - docker build -f Dockerfile.python -t $BACKEND_URI:$IMAGE_TAG -t $BACKEND_URI:latest .
+      - echo Building frontend image...
+      - docker build -f frontend/Dockerfile -t $FRONTEND_URI:$IMAGE_TAG -t $FRONTEND_URI:latest ./frontend
+
+  post_build:
+    commands:
+      - echo Pushing images to ECR...
+      - docker push $BACKEND_URI:$IMAGE_TAG
+      - docker push $BACKEND_URI:latest
+      - docker push $FRONTEND_URI:$IMAGE_TAG
+      - docker push $FRONTEND_URI:latest
+      - echo Build complete.
