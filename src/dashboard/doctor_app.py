@@ -54,7 +54,7 @@ OUTCOMES = {
 # Icon per department (Tabler-ish unicode fallback via emoji-free glyphs).
 # Kept simple: a coloured dot label, no external icon dependency.
 
-app = Dash(__name__, suppress_callback_exceptions=True)
+app = Dash(__name__, suppress_callback_exceptions=True, requests_pathname_prefix="/doctors-dash/", routes_pathname_prefix="/doctors-dash/")
 app.title = "HAIP — Provider Performance"
 app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}
 <style>

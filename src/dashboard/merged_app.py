@@ -54,7 +54,7 @@ RISK_COLOURS = {
     "deterioration": GREEN,
 }
 
-app = Dash(__name__, suppress_callback_exceptions=True)
+app = Dash(__name__, suppress_callback_exceptions=True, requests_pathname_prefix="/dash/", routes_pathname_prefix="/dash/")
 app.title = "HAIP — Data Intake & Prediction"
 app.index_string = '''<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}
 <style>

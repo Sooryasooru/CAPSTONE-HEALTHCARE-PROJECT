@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.python
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000
     working_dir: /app/src
+    ports:
+      - "8000:8000"
     env_file:
       - .env
     volumes:
@@ -17,6 +19,8 @@ services:
       dockerfile: Dockerfile.python
     command: python -m dashboard.merged_app
     working_dir: /app/src
+    ports:
+      - "8060:8060"
     env_file:
       - .env
     volumes:
@@ -29,6 +33,8 @@ services:
       dockerfile: Dockerfile.python
     command: python -m dashboard.doctor_app
     working_dir: /app/src
+    ports:
+      - "8051:8051"
     env_file:
       - .env
     volumes:
@@ -41,6 +47,8 @@ services:
       dockerfile: Dockerfile.python
     command: streamlit run rag/chat_app.py --server.port 8501 --server.address 0.0.0.0 --server.enableCORS false --server.enableXsrfProtection false --server.baseUrlPath chat
     working_dir: /app/src
+    ports:
+      - "8501:8501"
     env_file:
       - .env
     volumes:
@@ -53,6 +61,8 @@ services:
       dockerfile: Dockerfile.python
     command: uvicorn agent.service:app --host 0.0.0.0 --port 8062
     working_dir: /app
+    ports:
+      - "8062:8062"
     env_file:
       - .env
     volumes:
@@ -64,10 +74,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "5173:5173"
     depends_on:
       - fastapi
       - merged_app
       - doctor_app
       - streamlit
       - agent_app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

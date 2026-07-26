@@ -9,7 +9,7 @@ export default function Doctors({ nav, back }) {
       </button>
       <iframe
         className="dash-fullscreen-frame"
-        src="http://16.170.171.18:8051"
+        src="/doctors-dash/"
         title="Doctors — Department & Provider Analytics"
       />
     </div>
