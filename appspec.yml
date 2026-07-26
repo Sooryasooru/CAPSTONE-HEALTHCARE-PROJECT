@@ -1,0 +1,15 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/CAPSTONE-HEALTHCARE-PROJECT
+file_exists_behavior: OVERWRITE
+hooks:
+  ApplicationStop:
+    - location: scripts/stop.sh
+      timeout: 120
+      runas: root
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 600
+      runas: root

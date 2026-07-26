@@ -1,0 +1,57 @@
+services:
+  fastapi:
+    image: 700640309357.dkr.ecr.eu-north-1.amazonaws.com/haip-backend:latest
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    working_dir: /app/src
+    env_file: [.env]
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  merged_app:
+    image: 700640309357.dkr.ecr.eu-north-1.amazonaws.com/haip-backend:latest
+    command: python -m dashboard.merged_app
+    working_dir: /app/src
+    env_file: [.env]
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  doctor_app:
+    image: 700640309357.dkr.ecr.eu-north-1.amazonaws.com/haip-backend:latest
+    command: python -m dashboard.doctor_app
+    working_dir: /app/src
+    env_file: [.env]
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  streamlit:
+    image: 700640309357.dkr.ecr.eu-north-1.amazonaws.com/haip-backend:latest
+    command: streamlit run rag/chat_app.py --server.port 8501 --server.address 0.0.0.0 --server.enableCORS false --server.enableXsrfProtection false --server.baseUrlPath chat
+    working_dir: /app/src
+    env_file: [.env]
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  agent_app:
+    image: 700640309357.dkr.ecr.eu-north-1.amazonaws.com/haip-backend:latest
+    command: uvicorn agent.service:app --host 0.0.0.0 --port 8062
+    working_dir: /app
+    env_file: [.env]
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    image: 700640309357.dkr.ecr.eu-north-1.amazonaws.com/haip-frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - fastapi
+      - merged_app
+      - doctor_app
+      - streamlit
+      - agent_app
+    restart: unless-stopped
