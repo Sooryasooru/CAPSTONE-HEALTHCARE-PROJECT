@@ -45,7 +45,7 @@ def _build_llm():
     if os.getenv("HAIP_AGENT_BACKEND") == "groq":
         # Eval backend: Groq has a far larger free quota than Gemini's 20/day.
         llm = ChatGroq(
-            model=os.getenv("HAIP_AGENT_MODEL", "llama-3.3-70b-versatile"),
+            model=os.getenv("HAIP_AGENT_MODEL", "openai/gpt-oss-20b"),
             temperature=0.1,
             groq_api_key=os.getenv("GROQ_API_KEY"),
         )
