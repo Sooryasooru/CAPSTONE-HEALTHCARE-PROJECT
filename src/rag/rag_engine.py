@@ -57,9 +57,10 @@ load_dotenv()
 # Configuration
 # --------------------------------------------------------------------------- #
 
-LLM_PROVIDER = "gemini"             # "gemini" | "anthropic" | "openai"
+LLM_PROVIDER = os.getenv("HAIP_RAG_BACKEND", "groq")   # "groq" | "gemini" | "anthropic" | "openai"
 
 GEMINI_MODEL = "gemini-2.5-flash"
+GROQ_MODEL = "llama-3.1-8b-instant"
 ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 OPENAI_MODEL = "gpt-4o-mini"
 
@@ -112,6 +113,8 @@ class RAGEngine:
 
     def _call_llm(self, system: str, user: str) -> str:
         """Dispatch to the configured provider. Swappable by one config line."""
+        if self.provider == "groq":
+            return self._call_groq(system, user)
         if self.provider == "gemini":
             return self._call_gemini(system, user)
         if self.provider == "anthropic":
@@ -119,6 +122,18 @@ class RAGEngine:
         if self.provider == "openai":
             return self._call_openai(system, user)
         raise ValueError(f"Unknown provider: {self.provider}")
+
+    def _call_groq(self, system: str, user: str) -> str:
+        if self._client is None:
+            from groq import Groq
+            self._client = Groq(api_key=os.environ["GROQ_API_KEY"])
+        resp = self._client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "system", "content": system},
+                      {"role": "user", "content": user}],
+            max_tokens=MAX_TOKENS,
+        )
+        return resp.choices[0].message.content
 
     def _call_gemini(self, system: str, user: str) -> str:
         if self._client is None:
