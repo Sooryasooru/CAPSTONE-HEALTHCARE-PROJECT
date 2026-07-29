@@ -16,7 +16,7 @@ from pathlib import Path
 
 DOCTORS_CSV = Path(__file__).resolve().parents[2] / "data" / "samples" / "hospital_doctors_large.csv"
 
-app = FastAPI(title="HAIP API", version="0.1.0")
+app = FastAPI(title="HAIP API", version="0.1.0", root_path="/api")
 
 # Allow the React dev server (Vite on :5173) to call this API from the browser.
 # Without CORS, the browser blocks cross-origin requests.
